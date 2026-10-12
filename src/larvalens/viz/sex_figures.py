@@ -46,8 +46,7 @@ def fig16_sex_results(cv: pd.DataFrame, scores: pd.Series) -> Figure:
     prec, rec, _ = precision_recall_curve(y, cv["p_male"])
     axes[2].plot(rec, prec, color=viz.COLORS["male"], lw=1.5)
     axes[2].axhline(y.mean(), color="#999999", ls="--", lw=0.8)
-    axes[2].text(1, y.mean(), "chance", ha="right", va="bottom", fontsize=7, color="#555555")
-    axes[2].set_xlabel("Recall (male)")
+    axes[2].set_xlabel("Recall (male); dashed line = chance")
     axes[2].set_ylabel("Precision (male)")
     axes[2].set_title(f"Precision-recall, AP {scores['pr_auc_male']:.2f}", loc="left")
     for a in axes[1:]:

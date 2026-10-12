@@ -122,18 +122,10 @@ def fig10_morphometrics(crop: np.ndarray, mask: np.ndarray, mm_per_px: float) ->
     ends = path[[0, -1]]
     tips = dt[ends[:, 0].round().astype(int), ends[:, 1].round().astype(int)]
     length_px = np.linalg.norm(np.diff(path, axis=0), axis=1).sum() + tips.sum()
-    axes[2].text(
-        0.03,
-        0.03,
-        f"length {length_px * mm_per_px:.1f} mm",
-        transform=axes[2].transAxes,
-        fontsize=7.5,
-        color=viz.COLORS["female"],
-        fontweight="bold",
-    )
+    skeleton_title = f"Skeleton: {length_px * mm_per_px:.1f} mm long"
     im = axes[3].imshow(np.where(mask, 2 * dt * mm_per_px, np.nan)[win], cmap="viridis")
     fig.colorbar(im, ax=axes[3], fraction=0.046, pad=0.03, label="Local width (mm)")
-    titles = ["Photo (fixed window)", "YOLO mask", "Skeleton, longest path", "Width map"]
+    titles = ["Photo (fixed window)", "YOLO mask", skeleton_title, "Width map"]
     for ax, t in zip(axes, titles, strict=True):
         ax.set_title(t, loc="left", fontsize=8)
         ax.set_xticks([])
@@ -152,15 +144,12 @@ def fig11_calibration(df: pd.DataFrame, paper_mm_per_px: float) -> Figure:
     ax.plot([lo, hi], [lo, hi], color="#999999", lw=0.8, ls="--")
     ax.scatter(x, y, s=5, color=viz.COLORS["ink"], alpha=0.35, lw=0)
     r = np.corrcoef(x, y)[0, 1]
-    ax.text(
-        0.04, 0.96, f"r = {r:.2f}\nn = {len(df):,}", transform=ax.transAxes, va="top", fontsize=7.5
-    )
     ax.set_xlabel("Caliper length (mm)")
     ax.set_ylabel("Image length (mm)")
     ax.set_xlim(lo, hi)
     ax.set_ylim(lo, hi)
     ax.set_aspect("equal")
-    ax.set_title("Image length tracks caliper length", loc="left")
+    ax.set_title(f"Image length tracks caliper length\n(r = {r:.2f}, n = {len(df):,})", loc="left")
     mean = (x + y) / 2
     diff = y - x
     bias, sd = diff.mean(), diff.std()
@@ -176,8 +165,9 @@ def fig11_calibration(df: pd.DataFrame, paper_mm_per_px: float) -> Figure:
             lw=0.9,
             ls="-" if v == bias else "--",
         )
-        bx.text(mean.max(), v, " " + lab, va="bottom", fontsize=7)
-    bx.set_xlim(right=mean.max() + (mean.max() - mean.min()) * 0.35)
+        bx.text(
+            1.01, v, lab, va="center", fontsize=7, transform=bx.get_yaxis_transform(), clip_on=False
+        )
     bx.set_xlabel("Mean of the two lengths (mm)")
     bx.set_ylabel("Image minus caliper (mm)")
     bx.set_title("Bland-Altman agreement", loc="left")
@@ -217,24 +207,33 @@ def fig12_allometry(labels: pd.DataFrame) -> Figure:
     ax.set_xlabel("Caliper length (mm, log scale)")
     ax.set_ylabel("Weight (g, log scale)")
     lo, hi = np.percentile(bs, [2.5, 97.5])
-    ax.text(
-        0.04,
-        0.96,
-        f"W = {np.exp(a) * 1000:.2f} mg × L^{b:.2f}\nexponent 95% CI {lo:.2f} to {hi:.2f}",
-        transform=ax.transAxes,
-        va="top",
-        fontsize=7.5,
-        color=viz.COLORS["female"],
+    ax.set_title(
+        f"Weight grows as length to the power {b:.2f}\n"
+        f"W = {np.exp(a) * 1000:.2f} mg × L^{b:.2f} (95% CI of power {lo:.2f} to {hi:.2f})",
+        loc="left",
     )
-    ax.set_title(f"Weight grows as length to the power {b:.2f}", loc="left")
     return fig
 
 
 def fig13_pred_vs_measured(preds: pd.DataFrame, models: list[str]) -> Figure:
     """Out-of-fold predicted vs measured weight, one hexbin panel per model."""
+    short = {
+        "Linear (area, length, width)": "Linear on shape",
+        "Power law (length)": "Power law on length",
+        "Gradient boosting": "Gradient boosting on shape",
+        "ResNet-18 (fine-tuned)": "ResNet-18 on pixels",
+        "DINOv2 + ridge": "DINOv2 + ridge on pixels",
+    }
     n = len(models)
-    fig, axes = viz.new_figure("double", 7.2 / n + 0.7, 1, n, sharex=True, sharey=True)
-    axes = np.atleast_1d(axes)
+    ncols = min(n, 3)
+    nrows = int(np.ceil(n / ncols))
+    fig, axes = viz.new_figure("double", 2.75 * nrows, nrows, ncols, sharex=True, sharey=True)
+    axes = np.atleast_1d(axes).flatten()
+    for ax in axes[n:]:
+        ax.axis("off")
+    for ax in axes[max(0, n - ncols) : n]:  # the last panel in each column shows its x labels
+        ax.tick_params(labelbottom=True)
+    axes = axes[:n]
     lo, hi = preds[["weight_g", "pred_g"]].min().min(), preds[["weight_g", "pred_g"]].max().max()
     for ax, m in zip(axes, models, strict=True):
         d = preds[preds["model"] == m]
@@ -251,18 +250,18 @@ def fig13_pred_vs_measured(preds: pd.DataFrame, models: list[str]) -> Figure:
         ss = ((d["weight_g"] - d["pred_g"]) ** 2).sum()
         r2 = 1 - ss / ((d["weight_g"] - d["weight_g"].mean()) ** 2).sum()
         mae = (d["weight_g"] - d["pred_g"]).abs().mean() * 1000
-        ax.text(
-            0.04,
-            0.96,
-            f"pooled out-of-fold\nR² {r2:.2f}, MAE {mae:.0f} mg",
-            transform=ax.transAxes,
-            va="top",
-            fontsize=7.5,
-        )
-        ax.set_title(m, loc="left", fontsize=8)
+        ax.set_title(f"{short.get(m, m)}\nR² {r2:.2f}, MAE {mae:.0f} mg", loc="left", fontsize=8)
         ax.set_aspect("equal")
         ax.set_xlabel("Measured weight (g)")
-    axes[0].set_ylabel("Predicted weight (g)")
+    for ax in axes[::ncols]:
+        ax.set_ylabel("Predicted weight (g)")
+    fig.suptitle(
+        "Out-of-fold predictions on unseen batches",
+        x=0.01,
+        ha="left",
+        fontweight="bold",
+        fontsize=9,
+    )
     viz.panel_letters(axes)
     return fig
 

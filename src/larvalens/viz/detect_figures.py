@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.collections import PolyCollection
 from matplotlib.figure import Figure
+from matplotlib.ticker import FixedLocator, NullFormatter, ScalarFormatter
 
 from larvalens import viz
 
@@ -86,17 +87,17 @@ def fig08_count_agreement(counts: pd.DataFrame, models: list[str]) -> Figure:
         err = p - y
         ax.plot([low, top], [low, top], color="#999999", lw=0.8, ls="--")
         ax.scatter(y, p, s=14, color=MODEL_COLORS.get(m, "#222222"), alpha=0.8)
-        ax.text(
-            0.04,
-            0.96,
-            f"median error {err.median():+.0f}\nMAE {err.abs().mean():.1f} larvae",
-            transform=ax.transAxes,
-            va="top",
-            fontsize=7.5,
+        ax.set_title(
+            f"{MODEL_LABELS.get(m, m)}\n"
+            f"median error {err.median():+.0f}, MAE {err.abs().mean():.1f}",
+            loc="left",
         )
-        ax.set_title(MODEL_LABELS.get(m, m), loc="left")
         ax.set_xscale("log")
         ax.set_yscale("log")
+        for axis in (ax.xaxis, ax.yaxis):
+            axis.set_major_locator(FixedLocator([1, 3, 10, 30, 100, 300]))
+            axis.set_major_formatter(ScalarFormatter())
+            axis.set_minor_formatter(NullFormatter())
         ax.set_xlim(low, top)
         ax.set_ylim(low, top)
         ax.set_aspect("equal")
@@ -128,28 +129,18 @@ def fig09_training_curves(epochs: pd.DataFrame, models: list[str]) -> Figure:
         ax.plot(e["epoch"], e["val/seg_loss"], color=c, lw=1.3)
         bx.plot(e["epoch"], e["metrics/mAP50-95(M)"], color=c, lw=1.3)
         ends[m] = float(e["metrics/mAP50-95(M)"].iloc[-5:].mean())
-    for m, y in _spread(ends, 0.035).items():
+    for m, y in _spread(ends, 0.05).items():
         viz.label_line(
             bx, epochs["epoch"].max(), y, MODEL_LABELS.get(m, m), MODEL_COLORS.get(m, "#222222")
         )
     late = epochs[epochs["epoch"] > 10]
     ax.set_ylim(0, max(late["val/seg_loss"].max(), late["train/seg_loss"].max()) * 1.3)
-    ax.text(
-        0.98,
-        0.95,
-        "faint: train, solid: validation\nfirst epochs spike off the scale",
-        transform=ax.transAxes,
-        ha="right",
-        va="top",
-        fontsize=7,
-        color="#555555",
-    )
-    ax.set_xlabel("Epoch")
+    ax.set_xlabel("Epoch (faint: train, solid: validation; early spikes are cut off)")
     ax.set_ylabel("Segmentation loss")
     bx.set_xlabel("Epoch")
     bx.set_ylabel("Validation mask mAP50-95")
     bx.set_xlim(right=epochs["epoch"].max() * 1.2)
-    bx.set_ylim(0, max(_spread(ends, 0.035).values()) + 0.06)
+    bx.set_ylim(0, max(_spread(ends, 0.05).values()) + 0.06)
     ax.set_title("Loss settles after about 20 epochs", loc="left")
     bx.set_title("All three sizes reach similar mask accuracy", loc="left")
     viz.panel_letters([ax, bx])

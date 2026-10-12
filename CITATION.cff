@@ -5,7 +5,6 @@ type: software
 authors:
   - family-names: Patwary
     given-names: Md Raihan
-    orcid: "https://orcid.org/0009-0006-0616-3742"
 repository-code: "https://github.com/raihan-patwary/larvalens"
 license: AGPL-3.0-only
 version: 1.0.0

@@ -190,7 +190,6 @@ def fig05_weight_ridgeline(labels: pd.DataFrame, batches: pd.DataFrame) -> Figur
         y0 = -i * step
         color = viz.temp_color(info.get(b, np.nan))
         ax.fill_between(grid, y0, y0 + dens, color=color, alpha=0.75, lw=0, zorder=len(order) - i)
-        ax.plot(grid, y0 + dens, color="white", lw=0.8, zorder=len(order) - i)
         med = np.median(w)
         ax.plot(
             [med, med],
@@ -217,14 +216,14 @@ def fig05_weight_ridgeline(labels: pd.DataFrame, batches: pd.DataFrame) -> Figur
         [("29 °C", viz.COLORS["29C"]), ("25 °C", viz.COLORS["25C"]), ("unknown", "#999999")]
     ):
         ax.text(
-            0.98,
-            0.97 - j * 0.045,
+            0.60 + j * 0.2,
+            1.005,
             txt,
             color=col,
             transform=ax.transAxes,
-            ha="right",
-            va="top",
+            ha="left",
+            va="bottom",
             fontweight="bold",
         )
-    ax.set_title("Weight varies more between batches\nthan between temperatures")
+    ax.set_title("Weight varies more between batches\nthan between temperatures", pad=16)
     return fig

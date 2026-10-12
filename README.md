@@ -12,84 +12,100 @@ From photos to phenotypes: counting, measuring, weighing and sexing black soldie
   <img alt="One held-out larva: photo, outline, skeleton with width map, and its predicted weight and sex" src="figures/fig01_hero_light.png">
 </picture>
 
-## What it does
+## Why this project
 
-LarvaLens rebuilds and stress-tests the image pipeline of [Nawoya et al. (2025)](https://doi.org/10.1016/j.atech.2025.100953) on their public dataset, with one rule throughout: **models are scored on rearing batches they never saw**.
+Black soldier fly larvae turn food waste into protein for animal feed, and insect farms need to know how big, how heavy and which sex their larvae are. Weighing and sexing them by hand is slow. A camera could do it, and in 2025 a team at Aarhus University showed how ([Nawoya et al., 2025](https://doi.org/10.1016/j.atech.2025.100953)), and released their photos and measurements as an open dataset.
 
-- **Count**: YOLOv8 instance segmentation finds and outlines larvae in crowded photos.
-- **Size**: each single-larva photo is outlined, skeletonised and measured in millimetres.
-- **Weight**: from shape (linear, power-law and gradient-boosting models) and straight from the pixels (a fine-tuned ResNet-18, and ridge regression on frozen DINOv2 features).
-- **Sex**: a class-weighted ResNet-18 on the dataset's sex crops, with Grad-CAM to show where it looks.
+I work on image-based live weight estimation in cattle, where the same steps apply: find the animal, outline it, measure it, and predict its weight. This dataset let me build that whole pipeline in the open, on a public benchmark, and ask one question the paper left open: **do the results hold for larvae from a rearing batch the model has never seen?** That is the situation a real farm would face.
 
-## Results beside the paper
+## What I did differently
 
-| Task | Our model | Ours, unseen batches | Ours, random split | Paper (random split) |
+| | Nawoya et al. (2025) | LarvaLens |
+| --- | --- | --- |
+| How models are tested | Random 80/20 split of larvae | Whole rearing batches held out (5-fold, grouped by batch), plus the random split for comparison |
+| Detection test set | 224 / 97 images | Split by source photo, because the 321 images contain augmented copies of only 185 photos |
+| Weight from pixels | Crops resized to 224 px, size fed back in | One fixed window for every larva, so the network sees true size |
+| Sex | Data cut down to a balanced subset | All usable crops, class weights, balanced accuracy |
+| Code and models | Not published with the dataset | Everything here: download with checksums, tests, notebooks, figures rebuilt from saved results |
+
+Before modelling, every number in the dataset was checked against the paper. The audit found real problems: two class IDs that both mean "larva", 36 sex-crop files that are not images, and two larva IDs with two different crops. All of it is listed in the [data card](DATA_CARD.md).
+
+## Results
+
+| Task | Our model | Unseen batches | Random split | Paper (random split) |
 | --- | --- | --- | --- | --- |
-| Detect and outline (mask AP50) | YOLOv8m-seg | | 0.89 (photo-grouped split) | 0.93 |
+| Find and outline larvae (mask AP50) | YOLOv8m-seg | | 0.89 (photo-grouped) | 0.93 |
+| Weight from pixels (R²) | ResNet-18, fine-tuned | **0.70 ± 0.09** | **0.80** (error 12.5 mg) | 0.71 |
 | Weight from shape (R²) | Linear on area, length, width | 0.53 ± 0.17 | 0.58 | 0.80 |
-| Weight from pixels (R²) | ResNet-18, fine-tuned | **0.70 ± 0.09** | **0.80** | 0.71 |
-| Sex (balanced accuracy / accuracy) | ResNet-18, class weights | 0.56 / 0.61 | 0.56 / 0.60 | accuracy 0.74 on a balanced subset |
+| Sex (balanced accuracy) | ResNet-18, class weights | 0.56 | 0.56 | 74% accuracy on a balanced subset |
 
-What the honest test changes:
+What this means:
 
-1. **Detection is solid.** Our split keeps all augmented copies of a photo together, which the paper's split may not have done; most remaining "errors" are larvae the labellers skipped.
-2. **Weight is best learned straight from the pixels.** A fine-tuned ResNet-18 on fixed-size crops (one shrink factor for every larva, so size is kept) reaches R² 0.70 on unseen batches and 0.80 on a random split (MAE 12.5 mg), matching the paper's best figure. Measuring shape does worse (R² 0.53 on unseen batches) because image length agrees with caliper length only at r = 0.73: larvae stretch and contract between the caliper and the camera. Frozen DINOv2 features with ridge regression sit in between (R² 0.60); they group the crops by photo setup rather than by weight.
-3. **Sex is barely predictable from a single photo** (ROC-AUC 0.57). The paper's 74% came from a hand-balanced subset; on all usable crops and unseen batches the signal is weak.
-4. **The data needed care.** The audit found that the detection set holds only 185 distinct photos, that its two class IDs both mean "larva", and that 36 sex-crop files are not images. All of this is in [DATA_CARD.md](DATA_CARD.md) and [results/data_checks.md](results/data_checks.md).
+- **Weight is best learned straight from the photo.** On a random split the network matches the paper's best number, and it still reaches R² 0.70 on batches it never saw.
+- **Measuring shape and converting it to weight works less well than reported.** Image length agrees with caliper length only at r = 0.73, because larvae stretch and contract between the caliper and the camera.
+- **Sex is barely visible in a single photo** (ROC-AUC 0.57). The network finds no reliable cue once it is tested honestly.
+- **Detection is solid.** Most remaining "errors" are larvae that the labellers skipped in crowded photos.
 
-## Quickstart
+## Key figures
 
-```bash
-git clone https://github.com/raihan-patwary/larvalens && cd larvalens
-uv sync                                # Python 3.11, pinned packages
-uv run python -m larvalens data        # download, verify (md5), clean, audit and split
-uv run python -m larvalens figures     # rebuild every figure from results/
-uv run pytest                          # tests run on synthetic data only
-```
+All 18 figures are in [`figures/`](figures/). These six tell the story.
 
-GPU steps run as Kaggle notebooks in `kernels/` (photo QC, detection, measuring, weight from pixels, sex). Their small outputs are saved in `results/`, so every figure can be rebuilt without retraining.
+**1. The data needed cleaning first.**
+Most missing values sit in the 219 larvae with no recorded batch, and only 1,413 of the sex crops can be used.
+![Data audit](figures/fig03_data_audit.png)
+
+**2. The detector finds larvae, including ones nobody labelled.**
+Top row: the labels shipped with the dataset. Bottom row: our YOLOv8m model on test photos it never saw. Extra detections in crowded photos are mostly real larvae left unlabelled.
+![Detection](figures/fig07_detection_overlay.png)
+
+**3. Each larva is measured from its outline.**
+The outline gives the area, its skeleton gives the length, and the distance to the edge gives the width. Pixels become millimetres with a scale fitted only on training larvae.
+![Morphometrics](figures/fig10_morphometrics.png)
+
+**4. Image length and caliper length agree only roughly.**
+The two measurements differ by up to ±2.7 mm for the same larva. This limits every model that weighs larvae from their measured shape.
+![Calibration](figures/fig11_calibration.png)
+
+**5. Learning from pixels beats measuring shape.**
+Filled dots are scores on unseen batches; hollow dots are the random split. Dashed lines are the paper's values.
+![Model comparison](figures/fig14_model_comparison.png)
+
+**6. Sex is close to chance.**
+The confusion matrix, ROC and precision-recall curves all sit near the chance line on unseen batches.
+![Sex results](figures/fig16_sex_results.png)
 
 ## Pipeline
 
 ```mermaid
 flowchart LR
-    Z[(Zenodo record<br/>13359376)] --> A[Download and md5 check]
-    A --> B[Clean labels<br/>parse batch notes]
-    A --> C[Audit images]
-    B --> S[Batch-grouped folds<br/>+ bonus set + random split]
-    C --> D[YOLOv8 segmentation<br/>321 crowded images]
-    D --> M[Outline 1,608 single-larva photos]
-    M --> W1[Morphometrics<br/>length, width, area]
-    W1 --> R1[Weight from shape]
-    M --> CR[Fixed-size crops]
-    CR --> R2[Weight from pixels<br/>ResNet-18, DINOv2 + ridge]
-    C --> X[Sex crops] --> R3[Sex classifier<br/>+ Grad-CAM]
-    S --> R1 & R2 & R3
+    A["Zenodo dataset"] --> B["Download and check md5"]
+    B --> C["Clean labels and audit images"]
+    C --> D["Batch-grouped splits"]
+    C --> E["YOLOv8 on crowded photos"]
+    E --> F["Outline 1,608 single-larva photos"]
+    F --> G["Measure length, width, area"]
+    G --> H["Weight from shape"]
+    F --> I["Fixed-size crops"]
+    I --> J["Weight from pixels"]
+    C --> K["Sex crops"]
+    K --> L["Sex classifier and Grad-CAM"]
+    D --> H
+    D --> J
+    D --> L
 ```
 
-## Figure gallery
+## Run it yourself
 
-<table>
-<tr><td><img src="figures/fig07_detection_overlay.png" alt="Detection overlay"><br>Labelled and predicted larvae</td>
-<td><img src="figures/fig08_count_agreement.png" alt="Count agreement"><br>Count agreement</td></tr>
-<tr><td><img src="figures/fig10_morphometrics.png" alt="Morphometrics"><br>How a larva is measured</td>
-<td><img src="figures/fig11_calibration.png" alt="Calibration"><br>Image against caliper length</td></tr>
-<tr><td><img src="figures/fig13_pred_vs_measured.png" alt="Predicted weight"><br>Predicted against measured weight</td>
-<td><img src="figures/fig14_model_comparison.png" alt="Model comparison"><br>Models against the paper</td></tr>
-<tr><td><img src="figures/fig16_sex_results.png" alt="Sex results"><br>Sex classification</td>
-<td><img src="figures/fig17_gradcam.png" alt="Grad-CAM"><br>Where the network looks</td></tr>
-<tr><td><img src="figures/fig02_mosaic.png" alt="Mosaic"><br>Crops from lightest to heaviest</td>
-<td><img src="figures/fig12_allometry.png" alt="Allometry"><br>Weight against length</td></tr>
-<tr><td><img src="figures/fig03_data_audit.png" alt="Data audit"><br>Data audit</td>
-<td><img src="figures/fig04_batch_timeline.png" alt="Batch timeline"><br>Batch timeline</td></tr>
-<tr><td><img src="figures/fig05_weight_ridgeline.png" alt="Weight by batch"><br>Weight by batch</td>
-<td><img src="figures/fig06_image_qc.png" alt="Image QC"><br>Image quality</td></tr>
-<tr><td><img src="figures/fig09_training_curves.png" alt="Training curves"><br>Detection training curves</td>
-<td><img src="figures/fig15_failures.png" alt="Failure gallery"><br>The largest weight misses</td></tr>
-<tr><td><img src="figures/fig18_umap.png" alt="UMAP"><br>DINOv2 feature map</td><td></td></tr>
-</table>
+```bash
+git clone https://github.com/raihan-patwary/larvalens
+cd larvalens
+uv sync                               # Python 3.11 with pinned packages
+uv run python -m larvalens data       # download, verify, clean, audit and split
+uv run python -m larvalens figures    # rebuild every figure from results/
+uv run pytest                         # tests use synthetic data only
+```
 
-Every figure is built by a script from saved results, with one style file (`src/larvalens/viz/bsf.mplstyle`) and colour-blind-safe colours with fixed meanings.
+The GPU steps (photo checks, detection, measuring, weight from pixels, sex) run as Kaggle notebooks in [`kernels/`](kernels/). Their small outputs are saved in [`results/`](results/), so every figure can be rebuilt without a GPU.
 
 ## Data and credit
 
@@ -97,10 +113,10 @@ Dataset: Geissmann, Q. (2024). *Black soldier fly larvae dataset*. Zenodo. https
 
 Paper: Nawoya, S., Geissmann, Q., Karstoft, H., Bjerge, K., Akol, R., Katumba, A., Mwikirize, C. and Gebreyesus, G. (2025). Prediction of black soldier fly larval sex and morphological traits using computer vision and deep learning. *Smart Agricultural Technology* 11, 100953. https://doi.org/10.1016/j.atech.2025.100953
 
-All figures here are our own; none is reused from the paper. To cite this repository, see [CITATION.cff](CITATION.cff).
+All figures are my own; none is reused from the paper. To cite this repository, see [CITATION.cff](CITATION.cff).
 
 ## Author
 
-Md Raihan Patwary ([ORCID 0009-0006-0616-3742](https://orcid.org/0009-0006-0616-3742)). Licensed under AGPL-3.0, because Ultralytics YOLO is AGPL-3.0.
+Md Raihan Patwary. Licensed under AGPL-3.0, because Ultralytics YOLO is AGPL-3.0.
 
 Built with [Claude Code](https://claude.com/claude-code).

@@ -155,6 +155,8 @@ def build_figures() -> list[Path]:
         made += detect_figures()
     if (RESULTS / "weight_summary_shape.csv").exists():
         made += weight_figures()
+    if (OUTPUTS / "05_sex" / "sex_predictions.csv").exists():
+        run_sex()
     if (RESULTS / "sex_predictions.csv").exists() and (OUTPUTS / "03_measure" / "crops").exists():
         made += hero_banner()
     return made
