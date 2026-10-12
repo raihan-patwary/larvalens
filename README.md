@@ -58,6 +58,23 @@ We also measured 30 px per mm on the 2048 px copies, which is about 60 px per mm
 
 ![Image quality](figures/fig06_image_qc.png)
 
+### Sex from one photo
+
+A ResNet-18 with class weights, trained on the dataset's sex crops with the same batch folds (1,413 usable crops: 1,045 female, 368 male; sex was recorded when each larva emerged as an adult).
+
+| Test | Accuracy | Balanced accuracy | F1 female | F1 male | ROC-AUC |
+| --- | --- | --- | --- | --- | --- |
+| Batch folds (pooled out-of-fold, 1,314 crops) | 0.61 | 0.56 | 0.71 | 0.37 | 0.57 |
+| Unbatched bonus set (99 crops) | 0.67 | 0.53 | 0.79 | 0.20 | 0.52 |
+| Random 80/20, stratified (283 crops) | 0.60 | 0.56 | 0.71 | 0.38 | 0.59 |
+| Nawoya et al. (2025), balanced subset, random split | 0.74 | | F1 0.75 | | |
+
+Larval sex is barely predictable from these photos (0.5 is chance). The paper's 74% was measured after cutting the data down to 309 male and 386 female crops, on a random split, so it is not directly comparable; our own random split does not come close either. Grad-CAM shows the network looking at the mid-body segments whether it is right or wrong, so it has found no reliable visual cue. We read this as a useful negative result.
+
+![Sex results](figures/fig16_sex_results.png)
+
+![Grad-CAM gallery](figures/fig17_gradcam.png)
+
 ### The data
 
 All expected values in the planning brief were confirmed (`results/data_checks.md`). The audit also found problems worth knowing about, listed in [DATA_CARD.md](DATA_CARD.md).

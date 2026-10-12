@@ -9,7 +9,7 @@ from PIL import Image
 from sklearn.metrics import precision_recall_curve, roc_curve
 
 from larvalens import viz
-from larvalens.sex import PAPER, normalised_confusion
+from larvalens.sex import normalised_confusion
 
 
 def fig16_sex_results(cv: pd.DataFrame, scores: pd.Series) -> Figure:
@@ -54,8 +54,7 @@ def fig16_sex_results(cv: pd.DataFrame, scores: pd.Series) -> Figure:
         a.set_xlim(0, 1)
         a.set_ylim(0, 1.02)
     fig.suptitle(
-        f"Sex from one larva photo, tested on unseen batches (paper: {PAPER['accuracy']:.0%} "
-        "accuracy on a balanced subset)",
+        "Sex is barely predictable from one photo of a larva from an unseen batch",
         x=0.01,
         ha="left",
         fontweight="bold",
