@@ -29,6 +29,35 @@ Our numbers are a little below the paper's. Two things explain most of the gap. 
 
 ![Training curves](figures/fig09_training_curves.png)
 
+### Measuring and weighing larvae from their shape
+
+The best YOLO model (YOLOv8m-seg) outlined the larva in all 1,608 single-larva photos (median confidence 0.96). From each outline we measure area, perimeter, skeleton length and width, and fit mm per pixel inside each fold on training larvae only.
+
+![How a larva is measured](figures/fig10_morphometrics.png)
+
+| Model | R² (batch folds, mean ± SD) | MAE, mg (batch folds) | R² (unbatched bonus set) | R² (random 80/20) | MAE, mg (random 80/20) |
+| --- | --- | --- | --- | --- | --- |
+| Linear (area, length, width) | 0.53 ± 0.17 | 20.1 | 0.25 | 0.58 | 18.6 |
+| Gradient boosting | 0.51 ± 0.12 | 20.4 | 0.26 | 0.60 | 17.7 |
+| Power law (length) | 0.42 ± 0.18 | 22.5 | 0.02 | 0.44 | 21.2 |
+| Nawoya et al. (2025), linear, random 80/20 | | | | 0.80 | RMSE 18 mg |
+
+Our shape models explain less of the weight than the paper reports, even on a random split (R² 0.58 to 0.60 against 0.80). We checked the obvious suspects. The camera scale is steady across all 25 measuring days (29 to 32 px per mm on the 2048 px copies). The limit is the agreement between image length and caliper length (r = 0.73, ±2.7 mm): larvae stretch and contract between the caliper and the camera, which the paper also mentions. Testing on new batches costs a further 0.02 to 0.09 in R², and the unbatched larvae are harder still because their weights span a narrow range.
+
+We also measured 30 px per mm on the 2048 px copies, which is about 60 px per mm on the full photos. The paper states 28 px per mm. We report both and do not force a match.
+
+![Image length against caliper length](figures/fig11_calibration.png)
+
+![Predicted against measured weight](figures/fig13_pred_vs_measured.png)
+
+![Model comparison](figures/fig14_model_comparison.png)
+
+![Allometry](figures/fig12_allometry.png)
+
+![Crops from lightest to heaviest](figures/fig02_mosaic.png)
+
+![Image quality](figures/fig06_image_qc.png)
+
 ### The data
 
 All expected values in the planning brief were confirmed (`results/data_checks.md`). The audit also found problems worth knowing about, listed in [DATA_CARD.md](DATA_CARD.md).

@@ -1,0 +1,4 @@
+model,cv_r2_mean,cv_r2_std,cv_rmse_g_mean,cv_rmse_g_std,cv_mae_mg_mean,cv_mae_mg_std,bonus_r2,bonus_rmse_g,bonus_mae_mg,random_r2,random_rmse_g,random_mae_mg
+Gradient boosting,0.5096,0.1206,0.0263,0.0032,20.3802,2.1926,0.2591,0.0221,16.9237,0.6014,0.0236,17.7486
+"Linear (area, length, width)",0.5296,0.1723,0.0253,0.0021,20.1168,1.5302,0.2492,0.0222,17.4085,0.5762,0.0243,18.6475
+Power law (length),0.4229,0.1841,0.0282,0.0035,22.4602,2.5744,0.025,0.0253,19.9954,0.4439,0.0278,21.1609

@@ -33,10 +33,10 @@ Work through the blocks in order and tick each box when it is done. Follow CLAUD
 
 ## Block 3: morphometrics and weight from shape
 - [x] src/larvalens/morphometrics.py: from a binary mask compute area, perimeter, skeleton length (longest path, using skan), width (twice the max of the distance transform, and mean width over the middle half of the skeleton) and mean Lab colour. Unit tests on synthetic shapes with known answers: a straight capsule and a bent one.
-- [ ] kernels/03_measure (GPU, kernel_sources 01_photos and 02_detect): segment every photo with the best YOLO model (fall back to an Otsu threshold when no mask is found, and flag those rows), run morphometrics, and save measurements.csv, fixed-size crops centred on each larva, and 12 example panels.
-- [ ] Locally: in each batch fold, fit mm per pixel on training rows only (image length vs measured Length) and report agreement on held-out rows; compare with the paper's 28 px per mm. Fit weight models (linear on area, length and width; power law W = a L^b; gradient boosting) with the batch folds in splits/larvae.csv, then the no-batch bonus test set, plus the random 80/20 split for comparison with the paper.
-- [ ] Figures 2, 6, 10, 11 and 12, plus first versions of 13 and 14.
-- [ ] Commit, push.
+- [x] kernels/03_measure (GPU, kernel_sources 01_photos and 02_detect): segment every photo with the best YOLO model (fall back to an Otsu threshold when no mask is found, and flag those rows), run morphometrics, and save measurements.csv, fixed-size crops centred on each larva, and 12 example panels.
+- [x] Locally: in each batch fold, fit mm per pixel on training rows only (image length vs measured Length) and report agreement on held-out rows; compare with the paper's 28 px per mm. Fit weight models (linear on area, length and width; power law W = a L^b; gradient boosting) with the batch folds in splits/larvae.csv, then the no-batch bonus test set, plus the random 80/20 split for comparison with the paper.
+- [x] Figures 2, 6, 10, 11 and 12, plus first versions of 13 and 14.
+- [x] Commit, push.
 
 ## Block 4: weight from pixels and embeddings
 - [ ] kernels/04_pixels (GPU, internet on, kernel_sources 03_measure): fine-tune a timm ResNet-18 on the fixed crops to predict weight (Huber loss on log weight; flips and 90 degree rotations only) with the batch folds in splits/larvae.csv (one model per fold, then the no-batch bonus test set and the random split). Extract DINOv2 ViT-S/14 features for every crop, fit ridge regression on them, and compute a 2D UMAP. Save predictions, metrics, features and UMAP coordinates.

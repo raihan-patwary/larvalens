@@ -67,7 +67,9 @@ Processed on Kaggle by `kernels/01_photos` (download, md5, size, blur, brightnes
 - 1,608 JPEGs, all 4056 x 3040 px, named by larva ID (`0001.jpg`). No EXIF rotation.
 - Every photo matches exactly one spreadsheet row. Five rows have no photo: larva IDs 215, 368, 1001, 1282 and 1602.
 - No byte-identical duplicates. Blur and brightness are even across the set, and no photo is unreadable.
-- Downstream steps use the 2048 x 1536 copies (scale 0.505). At the paper's 28 px per mm, that is about 14.1 px per mm.
+- Downstream steps use the 2048 x 1536 copies (scale 0.505).
+- Scale: image length against caliper length gives 30.2 px per mm on the copies (about 60 px per mm on the full photos), steady from 29 to 32 px per mm across all measuring days. The paper states 28 px per mm. The difference is reported, not forced.
+- Many photos show a printed ruler and an ID label beside the larva. The YOLO model also detects digits on the labels, so the measuring step keeps the most confident larva-sized mask.
 
 ## Splits
 

@@ -13,8 +13,12 @@ import subprocess
 import sys
 import time
 
+T0 = time.time()
+DEADLINE_MIN = 100  # stop measuring and save what is done, so a stall cannot eat GPU hours
+print("started", flush=True)
 subprocess.run([sys.executable, "-m", "pip", "install", "-q", "ultralytics==8.4.175", "skan==0.13.1"],
-               check=True)
+               check=True, timeout=900)
+print(f"packages installed in {(time.time() - T0) / 60:.1f} min", flush=True)
 
 import cv2  # noqa: E402
 import numpy as np  # noqa: E402
@@ -25,10 +29,10 @@ settings.update({k: False for k in ("raytune", "wandb", "mlflow", "comet", "clea
                                     "tensorboard", "dvc", "neptune", "hub") if k in settings})
 
 OUT = "/kaggle/working"
-CROP = 512  # fixed window in photo-copy pixels (about 36 mm at the paper's scale)
-# A larva covers about 5,000 to 60,000 px on the 2048 px copies. Larger masks are
+CROP = 896  # fixed window in photo-copy pixels (about 30 mm at the fitted ~30 px per mm)
+# A larva covers about 30,000 to 150,000 px on the 2048 px copies. Larger masks are
 # background leaks; they are flagged and not measured, which also keeps runtime bounded.
-MIN_AREA, MAX_AREA = 2_000, 150_000
+MIN_AREA, MAX_AREA = 10_000, 300_000
 IMGSZ = 640
 
 
@@ -100,13 +104,21 @@ def main() -> None:
     os.makedirs(f"{OUT}/masks", exist_ok=True)
     rows = []
     files = qc.dropna(subset=["copy"])["copy"].tolist()
+    print(f"{len(files)} photos to measure; inputs ready at {(time.time() - T0) / 60:.1f} min",
+          flush=True)
     for i, name in enumerate(files):
-        rgb = cv2.cvtColor(cv2.imread(f"{photo_dir}/{name}"), cv2.COLOR_BGR2RGB)
-        res = model.predict(rgb, imgsz=IMGSZ, conf=0.25, retina_masks=True, verbose=False)[0]
+        if (time.time() - T0) / 60 > DEADLINE_MIN:
+            print(f"deadline reached after {i} photos; saving partial results", flush=True)
+            break
+        bgr = cv2.imread(f"{photo_dir}/{name}")
+        rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+        res = model.predict(bgr, imgsz=IMGSZ, conf=0.25, retina_masks=True, verbose=False)[0]
         row = {"copy": name, "model": model_name}
         if res.masks is not None and len(res.masks):
             conf = res.boxes.conf.cpu().numpy()
-            k = int(np.argmax(conf))
+            areas = res.masks.data.cpu().numpy().reshape(len(conf), -1).sum(axis=1)
+            # Label digits are also detected; keep the most confident larva-sized mask.
+            k = int(np.argmax(np.where(areas >= MIN_AREA, conf, -1)))
             mask = res.masks.data[k].cpu().numpy() > 0.5
             if mask.shape != rgb.shape[:2]:
                 mask = cv2.resize(mask.astype(np.uint8), rgb.shape[1::-1], cv2.INTER_NEAREST) > 0

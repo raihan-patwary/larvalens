@@ -176,7 +176,7 @@ def fig11_calibration(df: pd.DataFrame, paper_mm_per_px: float) -> Figure:
             lw=0.9,
             ls="-" if v == bias else "--",
         )
-        bx.text(mean.max(), v, " " + lab, va="center", fontsize=7)
+        bx.text(mean.max(), v, " " + lab, va="bottom", fontsize=7)
     bx.set_xlim(right=mean.max() + (mean.max() - mean.min()) * 0.35)
     bx.set_xlabel("Mean of the two lengths (mm)")
     bx.set_ylabel("Image minus caliper (mm)")
@@ -208,19 +208,25 @@ def fig12_allometry(labels: pd.DataFrame) -> Figure:
     ax.plot(grid, np.exp(a) * grid**b, color=viz.COLORS["female"], lw=1.6)
     ax.set_xscale("log")
     ax.set_yscale("log")
+    from matplotlib.ticker import FixedLocator, NullFormatter, ScalarFormatter
+
+    for axis, ticks in ((ax.xaxis, [12, 15, 20, 25]), (ax.yaxis, [0.06, 0.1, 0.2, 0.3])):
+        axis.set_major_locator(FixedLocator(ticks))
+        axis.set_major_formatter(ScalarFormatter())
+        axis.set_minor_formatter(NullFormatter())
     ax.set_xlabel("Caliper length (mm, log scale)")
     ax.set_ylabel("Weight (g, log scale)")
     lo, hi = np.percentile(bs, [2.5, 97.5])
     ax.text(
         0.04,
         0.96,
-        f"W = {np.exp(a):.2e} L^{b:.2f}\nb 95% CI {lo:.2f} to {hi:.2f}",
+        f"W = {np.exp(a) * 1000:.2f} mg × L^{b:.2f}\nexponent 95% CI {lo:.2f} to {hi:.2f}",
         transform=ax.transAxes,
         va="top",
         fontsize=7.5,
         color=viz.COLORS["female"],
     )
-    ax.set_title(f"Weight grows as length to the power {b:.1f}", loc="left")
+    ax.set_title(f"Weight grows as length to the power {b:.2f}", loc="left")
     return fig
 
 
@@ -248,7 +254,7 @@ def fig13_pred_vs_measured(preds: pd.DataFrame, models: list[str]) -> Figure:
         ax.text(
             0.04,
             0.96,
-            f"R² {r2:.2f}\nMAE {mae:.0f} mg",
+            f"pooled out-of-fold\nR² {r2:.2f}, MAE {mae:.0f} mg",
             transform=ax.transAxes,
             va="top",
             fontsize=7.5,
@@ -264,7 +270,7 @@ def fig13_pred_vs_measured(preds: pd.DataFrame, models: list[str]) -> Figure:
 def fig14_model_comparison(summary: pd.DataFrame) -> Figure:
     """Cross-validated R² and MAE per model, with the random split and the paper's values."""
     s = summary.sort_values("cv_r2_mean")
-    fig, (ax, bx) = viz.new_figure("double", 0.5 + 0.38 * len(s), 1, 2, sharey=True)
+    fig, (ax, bx) = viz.new_figure("double", 1.3 + 0.38 * len(s), 1, 2, sharey=True)
     y = np.arange(len(s))
     ax.errorbar(
         s["cv_r2_mean"],
@@ -279,19 +285,27 @@ def fig14_model_comparison(summary: pd.DataFrame) -> Figure:
     ax.scatter(s["random_r2"], y, facecolors="none", edgecolors=viz.COLORS["ink"], s=28, zorder=3)
     for name, val in PAPER.items():
         ax.axvline(val, color=viz.COLORS["29C"], lw=1, ls="--")
+        left = val < max(PAPER.values())
         ax.text(
-            val,
-            len(s) - 0.4,
-            name,
-            rotation=90,
+            val + (-0.006 if left else 0.006),
+            -0.75,
+            f"paper, {name.split(' (')[0].replace('Morphometric', 'shape')}\nR² {val:.2f}",
             fontsize=6.5,
             color=viz.COLORS["29C"],
-            ha="right",
-            va="top",
+            ha="right" if left else "left",
+            va="center",
         )
     ax.set_yticks(y, s["model"])
     ax.set_xlabel("R² (higher is better)")
-    ax.set_title("Filled: batch folds (mean ± SD). Hollow: random 80/20", loc="left", fontsize=8)
+    ax.set_ylim(-1.25, len(s) - 0.5)
+    fig.suptitle(
+        "Our shape models fall short of the paper's R² 0.80. Filled: batch folds "
+        "(mean ± SD); hollow: random 80/20.",
+        x=0.01,
+        ha="left",
+        fontweight="bold",
+        fontsize=8.5,
+    )
     bx.errorbar(
         s["cv_mae_mg_mean"],
         y,

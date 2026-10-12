@@ -49,7 +49,8 @@ Checked against the paper PDF (Nawoya et al. 2025). Section numbers refer to the
 ## Paper facts about the setup (for checks and the data card)
 - Imaging box with a Raspberry Pi HQ camera (12.3 MP) and an 8 to 50 mm zoom lens, 70 mm above the larva, diffuse LED light, white background (2.2, 4.1).
 - Single-larva photos are 4056 x 3040 px (2.4.2).
-- Calibration: 28 px per mm, from a reference object in the images (2.5.1). Compare our fitted mm per pixel with this and report the difference; never force it.
+- Calibration: 28 px per mm, from a reference object in the images (2.5.1). Compare our fitted mm per pixel with this and report the difference; never force it. Found: about 60 px per mm on full photos (30 on the 2048 px copies).
+- Ultralytics expects BGR arrays; pass cv2.imread output straight to predict().
 - Length by digital caliper, weight by microscale (1 mg precision). The method for width is not stated. Sex was recorded when each larva emerged as an adult, from a labelled vial (2.3).
 - Larvae were 11 to 14 days after hatching, 16 batches, June to October 2023 (2.1). The file has 12 named batches, July to November; report the file's numbers.
 - The paper does not describe how photo names link to larva IDs. Find this from the files.
