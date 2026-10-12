@@ -62,7 +62,12 @@ All expected values from the planning brief were confirmed; see `results/data_ch
 
 ## Single-larva photos: Single Larvae data.zip
 
-Processed on Kaggle by `kernels/01_photos` (download, md5, size, blur, brightness, perceptual hash, photo-to-row match, copies with the long side at most 2048 px). Results: pending.
+Processed on Kaggle by `kernels/01_photos` (download, md5, size, blur, brightness, perceptual hash, photo-to-row match, copies with the long side at most 2048 px). The zip holds one folder, `single_larvae_renamed_IDs/`.
+
+- 1,608 JPEGs, all 4056 x 3040 px, named by larva ID (`0001.jpg`). No EXIF rotation.
+- Every photo matches exactly one spreadsheet row. Five rows have no photo: larva IDs 215, 368, 1001, 1282 and 1602.
+- No byte-identical duplicates. Blur and brightness are even across the set, and no photo is unreadable.
+- Downstream steps use the 2048 x 1536 copies (scale 0.505). At the paper's 28 px per mm, that is about 14.1 px per mm.
 
 ## Splits
 

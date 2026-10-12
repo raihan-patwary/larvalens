@@ -19,10 +19,10 @@ Work through the blocks in order and tick each box when it is done. Follow CLAUD
 - [x] Run every expected-value check in CLAUDE.md and write results/data_checks.md.
 - [x] Unzip both zips. Record the annotation format, folder layout, image sizes, file naming, and whether the sex crops carry IDs that link to spreadsheet rows. Start DATA_CARD.md with this.
 - [x] Save splits/larvae.csv as CLAUDE.md describes.
-- [ ] kernels/01_photos (internet on, no GPU): download Single Larvae data.zip, check md5, record size, blur (variance of Laplacian) and brightness per photo, match photo names to spreadsheet rows, and save qc.csv, match.csv and copies with the long side at most 2048 px to its output. Push it and keep working while it runs. When pulling its outputs, skip the photo copies.
+- [x] kernels/01_photos (internet on, no GPU): download Single Larvae data.zip, check md5, record size, blur (variance of Laplacian) and brightness per photo, match photo names to spreadsheet rows, and save qc.csv, match.csv and copies with the long side at most 2048 px to its output. Push it and keep working while it runs. When pulling its outputs, skip the photo copies.
 - [x] Unit tests for clean.py on small synthetic tables.
 - [x] Figures 3, 4 and 5.
-- [ ] Commit, push.
+- [x] Commit, push.
 
 ## Block 2: detection and segmentation
 - [x] kernels/02_detect (GPU, internet on): download BSF_Larvae_v1.zip, check md5, convert labels to YOLO segmentation format if needed, make a fixed image split with seed 42 (pull it into splits/detect.csv), and train YOLOv8n-seg, YOLOv8s-seg and YOLOv8m-seg (the paper's size, for a like-for-like comparison). Save to its output: test-set box and mask precision, recall, mAP50 and mAP50-95; predicted vs true count per test image; loss and mAP per epoch; best weights; 6 test overlays.

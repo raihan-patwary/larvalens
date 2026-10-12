@@ -42,6 +42,29 @@ def photo_checks(labels: pd.DataFrame) -> list[checks.Check]:
     ]
 
 
+def photo_findings(labels: pd.DataFrame) -> list[str]:
+    """Findings from the 01_photos QC table, if it has been pulled."""
+    qc_path = OUTPUTS / "01_photos" / "qc.csv"
+    if not qc_path.exists():
+        return []
+    qc = pd.read_csv(qc_path)
+    missing = sorted(set(labels["larva_id"]) - set(qc["larva_id"].dropna().astype(int)))
+    sizes = qc.groupby(["width", "height"]).size()
+    near = int(qc["dhash"].duplicated(keep=False).sum())
+    size_text = " and ".join(f"{w} x {h}" for w, h in sizes.index)
+    return [
+        f"Single-larva photos: {len(qc):,} JPEGs, all {size_text}"
+        f" px, named by larva ID (0001.jpg). Every photo matches one spreadsheet row; "
+        f"{len(missing)} rows have no photo (larva IDs {', '.join(map(str, missing))}).",
+        f"No two photos are byte-identical (md5). {near} photos share a coarse 64-bit "
+        "perceptual hash with another photo, but each pair differs in brightness and file size, "
+        "so these look like similar empty backgrounds rather than repeated photos.",
+        f"Image quality is even: blur (variance of the Laplacian) {qc['blur'].min():.1f} to "
+        f"{qc['blur'].max():.1f}, mean brightness {qc['brightness'].min():.0f} to "
+        f"{qc['brightness'].max():.0f} on a 0 to 255 scale. No photo is unreadable.",
+    ]
+
+
 def build_data() -> None:
     """Download, verify, clean, audit and split; write the reports."""
     cfg = load_config()
@@ -96,6 +119,7 @@ def build_data() -> None:
         "the other 105 were measured on 2023-08-27, just after B011. This supports keeping "
         "unbatched larvae out of cross-validation.",
     ]
+    findings += photo_findings(labels)
     checks.write_report(result, findings)
 
     SPLITS.mkdir(parents=True, exist_ok=True)

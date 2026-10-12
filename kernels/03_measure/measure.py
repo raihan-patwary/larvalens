@@ -34,10 +34,17 @@ def find(pattern: str) -> list[str]:
 
 
 def support_path() -> str:
+    """Return a folder that contains the larvalens package, unzipping it if needed."""
     pkg = find("larvalens/morphometrics.py")
-    if pkg:
-        return os.path.dirname(os.path.dirname(pkg[0]))
-    raise FileNotFoundError("larvalens package not found in /kaggle/input")
+    if not pkg:
+        import zipfile
+
+        for z in find("larvalens.zip"):
+            zipfile.ZipFile(z).extractall("/tmp/support/larvalens")
+        pkg = glob.glob("/tmp/support/**/larvalens/morphometrics.py", recursive=True)
+    if not pkg:
+        raise FileNotFoundError("larvalens package not found in /kaggle/input")
+    return os.path.dirname(os.path.dirname(sorted(pkg, key=len)[0]))
 
 
 sys.path.insert(0, support_path())

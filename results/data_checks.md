@@ -5,7 +5,7 @@ Expected values from CLAUDE.md, checked against the downloaded files. Mismatches
 | Item | Expected | Found | Match | Note |
 | --- | --- | --- | --- | --- |
 | Detection set | 321 images, over 5,000 larva instances | 321 images, 6,612 instances | yes | Only 185 distinct source photos (see findings). |
-| Single-larva photos | 1,608 | not yet run | pending |  |
+| Single-larva photos | 1,608 | 1,608 photos; 1,608 match a spreadsheet row | yes |  |
 | Larva Data rows | 1,613 | 1,613 | yes |  |
 | Weight (g) | complete, 0.058 to 0.353 | 1,613/1,613, 0.058 to 0.353 | yes |  |
 | Length (mm) | complete, 11 to 26 | 1,613/1,613, 11.00 to 26.43 | yes | The maximum is 26.43 mm; the expected range was rounded. |
@@ -28,3 +28,6 @@ Expected values from CLAUDE.md, checked against the downloaded files. Mismatches
 - Usable sex crops: 1,413 (1,045 female, 368 male), 99 of them with no batch.
 - Age at measurement ranges from 10 to 20 days after hatching for the batches with a hatch date. The paper says 11 to 14 days.
 - The 114 unbatched larvae measured on 2023-11-18 share that date with batch B013, and the other 105 were measured on 2023-08-27, just after B011. This supports keeping unbatched larvae out of cross-validation.
+- Single-larva photos: 1,608 JPEGs, all 4056 x 3040 px, named by larva ID (0001.jpg). Every photo matches one spreadsheet row; 5 rows have no photo (larva IDs 215, 368, 1001, 1282, 1602).
+- No two photos are byte-identical (md5). 9 photos share a coarse 64-bit perceptual hash with another photo, but each pair differs in brightness and file size, so these look like similar empty backgrounds rather than repeated photos.
+- Image quality is even: blur (variance of the Laplacian) 7.3 to 39.0, mean brightness 179 to 236 on a 0 to 255 scale. No photo is unreadable.
