@@ -1,0 +1,16 @@
+{
+  "images": 321,
+  "label_files": 321,
+  "source_photos": 185,
+  "instances": 6612,
+  "instances_by_class": {
+    "0": 4713,
+    "1": 1899
+  },
+  "empty_label_files": 2,
+  "image_sizes": {
+    "640x640": 321
+  },
+  "sources_with_both_classes": 25,
+  "max_instances_per_image": 192
+}

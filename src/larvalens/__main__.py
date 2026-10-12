@@ -12,8 +12,26 @@ def _version(_: argparse.Namespace) -> None:
     print(__version__)
 
 
+def _data(_: argparse.Namespace) -> None:
+    from larvalens.pipeline import build_data
+
+    build_data()
+
+
+def _figures(_: argparse.Namespace) -> None:
+    import matplotlib
+
+    matplotlib.use("Agg")
+    from larvalens.pipeline import build_figures
+
+    for path in build_figures():
+        print(path.name)
+
+
 COMMANDS: dict[str, tuple[str, Callable[[argparse.Namespace], None]]] = {
     "version": ("Print the package version.", _version),
+    "data": ("Download, verify, clean, audit and split the data.", _data),
+    "figures": ("Rebuild every figure from saved results.", _figures),
 }
 
 

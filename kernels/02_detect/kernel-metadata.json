@@ -1,0 +1,13 @@
+{
+  "id": "mdraihanpatwary02/larvalens-02-detect",
+  "title": "larvalens-02-detect",
+  "code_file": "detect.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": ["mdraihanpatwary02/larvalens-support"],
+  "kernel_sources": [],
+  "competition_sources": []
+}

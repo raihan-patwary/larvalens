@@ -1,0 +1,13 @@
+{
+  "id": "mdraihanpatwary02/larvalens-01-photos",
+  "title": "larvalens-01-photos",
+  "code_file": "photos.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "kernel_sources": [],
+  "competition_sources": []
+}
