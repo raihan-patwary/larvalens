@@ -2,6 +2,7 @@
 
 From photos to phenotypes: counting, measuring, weighing and sexing black soldier fly larvae with computer vision.
 
+[![Software DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23325495.svg)](https://doi.org/10.5281/zenodo.23325495)
 [![Dataset DOI](https://img.shields.io/badge/data-10.5281%2Fzenodo.13359376-blue)](https://doi.org/10.5281/zenodo.13359376)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 ![Python 3.11](https://img.shields.io/badge/python-3.11-blue)
@@ -123,7 +124,7 @@ Dataset: Geissmann, Q. (2024). *Black soldier fly larvae dataset*. Zenodo. https
 
 Paper: Nawoya, S., Geissmann, Q., Karstoft, H., Bjerge, K., Akol, R., Katumba, A., Mwikirize, C. and Gebreyesus, G. (2025). Prediction of black soldier fly larval sex and morphological traits using computer vision and deep learning. *Smart Agricultural Technology* 11, 100953. https://doi.org/10.1016/j.atech.2025.100953
 
-All figures are my own; none is reused from the paper. To cite this repository, see [CITATION.cff](CITATION.cff).
+All figures are my own; none is reused from the paper. To cite this software, use its DOI, [10.5281/zenodo.23325495](https://doi.org/10.5281/zenodo.23325495), or see [CITATION.cff](CITATION.cff). The DOI covers this code and analysis only; the dataset keeps its own DOI and credit.
 
 ## Author
 

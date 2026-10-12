@@ -5,6 +5,7 @@ type: software
 authors:
   - family-names: Patwary
     given-names: Md Raihan
+doi: 10.5281/zenodo.23325495
 repository-code: "https://github.com/raihan-patwary/larvalens"
 license: AGPL-3.0-only
 version: 1.0.1
