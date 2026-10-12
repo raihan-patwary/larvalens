@@ -17,13 +17,17 @@ import sys
 import time
 import zipfile
 
-subprocess.run([sys.executable, "-m", "pip", "install", "-q", "ultralytics==8.3.40"], check=True)
+subprocess.run([sys.executable, "-m", "pip", "install", "-q", "ultralytics==8.4.175"], check=True)
 
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 import requests  # noqa: E402
 import torch  # noqa: E402
-from ultralytics import YOLO  # noqa: E402
+from ultralytics import YOLO, settings  # noqa: E402
+
+# Kaggle ships Ray, MLflow and others; their Ultralytics hooks are not needed and can break.
+settings.update({k: False for k in ("raytune", "wandb", "mlflow", "comet", "clearml",
+                                    "tensorboard", "dvc", "neptune", "hub") if k in settings})
 
 URL = "https://zenodo.org/records/13359376/files/BSF_Larvae_v1.zip?download=1"
 MD5 = "a5a104e2c10bbc499ad3c45b71d2ffd8"
