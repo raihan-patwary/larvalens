@@ -105,7 +105,17 @@ uv run python -m larvalens figures    # rebuild every figure from results/
 uv run pytest                         # tests use synthetic data only
 ```
 
-The GPU steps (photo checks, detection, measuring, weight from pixels, sex) run as Kaggle notebooks in [`kernels/`](kernels/). Their small outputs are saved in [`results/`](results/), so every figure can be rebuilt without a GPU.
+The GPU steps run as public Kaggle notebooks. The same code is in [`kernels/`](kernels/), and their small outputs are saved in [`results/`](results/), so every figure can be rebuilt without a GPU.
+
+| Step | Kaggle notebook |
+| --- | --- |
+| 1. Download and check the 6.9 GB photo set | [larvalens-01-photos](https://www.kaggle.com/code/mdraihanpatwary02/larvalens-01-photos) |
+| 2. Train YOLOv8 detection and segmentation | [larvalens-02-detect](https://www.kaggle.com/code/mdraihanpatwary02/larvalens-02-detect) |
+| 3. Outline and measure every larva | [larvalens-03-measure](https://www.kaggle.com/code/mdraihanpatwary02/larvalens-03-measure) |
+| 4. Weight from pixels (ResNet-18, DINOv2) | [larvalens-04-pixels-v2](https://www.kaggle.com/code/mdraihanpatwary02/larvalens-04-pixels-v2) |
+| 5. Sex classification and Grad-CAM | [larvalens-05-sex](https://www.kaggle.com/code/mdraihanpatwary02/larvalens-05-sex) |
+
+The notebooks read the package, splits and labels from the [larvalens-support](https://www.kaggle.com/datasets/mdraihanpatwary02/larvalens-support) dataset.
 
 ## Data and credit
 

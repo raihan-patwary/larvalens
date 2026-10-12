@@ -8,7 +8,7 @@ Task plan: @PLAN.md. Work through it in order and tick each box when it is done.
 
 ## Where work happens
 - Local (this folder): code, tests, figures, README, git.
-- Kaggle through the kaggle CLI: the 6.9 GB photo zip and all GPU work. One folder per notebook, kernels/NN_name/, with kernel-metadata.json (is_private true; enable_gpu and enable_internet only when needed). Chain notebooks with kernel_sources so each download happens once.
+- Kaggle through the kaggle CLI: the 6.9 GB photo zip and all GPU work. One folder per notebook, kernels/NN_name/, with kernel-metadata.json (is_private false since v1.0.1, made public by the owner; enable_gpu and enable_internet only when needed). Chain notebooks with kernel_sources so each download happens once.
 - Run a notebook: kaggle kernels push -p kernels/NN_name, poll kaggle kernels status, then kaggle kernels output <user/slug> -p outputs/NN_name.
 - Repo files a notebook needs (the larvalens package, splits) reach Kaggle as one small private dataset, larvalens-support, updated with kaggle datasets version and attached with dataset_sources.
 - Never commit data, zips, photos, model weights or the paper PDF (CC BY-NC-ND). Small CSVs go to results/, final figures to figures/.
