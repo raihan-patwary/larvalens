@@ -127,4 +127,67 @@ def build_figures() -> list[Path]:
     )
     made += viz.save(data_figures.fig04_batch_timeline(labels, batches), "fig04_batch_timeline")
     made += viz.save(data_figures.fig05_weight_ridgeline(labels, batches), "fig05_weight_ridgeline")
+    if (RESULTS / "detect_metrics_test.csv").exists():
+        made += detect_figures()
+    return made
+
+
+DETECT_MODELS = ["yolov8n-seg", "yolov8s-seg", "yolov8m-seg"]
+PAPER_MASK_AP50 = 0.93
+
+
+def collect_detect() -> pd.DataFrame:
+    """Copy the 02_detect metrics into results/ and add the paper's reference value."""
+    out = OUTPUTS / "02_detect"
+    metrics = pd.read_csv(out / "metrics_test.csv")
+    epochs = pd.read_csv(out / "epochs.csv")
+    counts = pd.read_csv(out / "counts_test.csv")
+    best_val = epochs.groupby("model")["metrics/mAP50-95(M)"].max().rename("val_mask_map50_95_best")
+    metrics = metrics.merge(best_val, on="model")
+    for m in DETECT_MODELS:
+        err = counts[f"pred_{m}"] - counts["true_count"]
+        metrics.loc[metrics["model"] == m, "count_mae"] = err.abs().mean()
+        metrics.loc[metrics["model"] == m, "count_median_error"] = err.median()
+    metrics["test_images"] = len(counts)
+    metrics["test_source_photos"] = counts["source"].nunique()
+    metrics["paper_mask_ap50"] = PAPER_MASK_AP50
+    RESULTS.mkdir(parents=True, exist_ok=True)
+    metrics.round(4).to_csv(RESULTS / "detect_metrics_test.csv", index=False)
+    counts.to_csv(RESULTS / "detect_counts_test.csv", index=False)
+    keep = [
+        "model",
+        "epoch",
+        "train/seg_loss",
+        "val/seg_loss",
+        "metrics/mAP50(M)",
+        "metrics/mAP50-95(M)",
+        "metrics/mAP50(B)",
+        "metrics/mAP50-95(B)",
+    ]
+    epochs[keep].round(5).to_csv(RESULTS / "detect_epochs.csv", index=False)
+    return metrics
+
+
+def detect_figures() -> list[Path]:
+    """Figures 7, 8 and 9 from the saved detection results."""
+    import json
+
+    from larvalens import viz
+    from larvalens.viz import detect_figures as df_
+
+    counts = pd.read_csv(RESULTS / "detect_counts_test.csv")
+    epochs = pd.read_csv(RESULTS / "detect_epochs.csv")
+    metrics = pd.read_csv(RESULTS / "detect_metrics_test.csv")
+    best = metrics.loc[metrics["val_mask_map50_95_best"].idxmax(), "model"]
+    made = []
+    pred_path = OUTPUTS / "02_detect" / "predictions_test.json"
+    if pred_path.exists() and DETECT_DIR.exists():
+        preds = json.loads(pred_path.read_text())
+        first = counts.drop_duplicates("source").sort_values("true_count")
+        picks = [first.iloc[len(first) // 4], first.iloc[(3 * len(first)) // 4], first.iloc[-1]]
+        images = [DETECT_DIR / "Images" / p["image"] for p in picks]
+        fig = df_.fig07_detection_overlay(images, DETECT_DIR / "Labels", preds, best)
+        made += viz.save(fig, "fig07_detection_overlay")
+    made += viz.save(df_.fig08_count_agreement(counts, DETECT_MODELS), "fig08_count_agreement")
+    made += viz.save(df_.fig09_training_curves(epochs, DETECT_MODELS), "fig09_training_curves")
     return made
