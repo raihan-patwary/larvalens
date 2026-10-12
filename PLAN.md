@@ -46,12 +46,12 @@ Work through the blocks in order and tick each box when it is done. Follow CLAUD
 ## Block 5: sex classification and Grad-CAM
 - [x] kernels/05_sex (GPU, internet on): download Larva_sex_classification.zip, check md5, use the batch folds if the crops link to spreadsheet rows (else 5 folds stratified by sex with seed 42, and say so in the README), and fine-tune a timm ResNet-18 with class weights. Save accuracy, balanced accuracy, per-class F1, ROC-AUC, the confusion matrix, ROC and PR curve data, and Grad-CAM overlays for 8 right and 8 wrong crops per class.
 - [x] Figures 16 and 17.
-- [ ] Commit, push.
+- [x] Commit, push.
 
 ## Block 6: README and v1.0
-- [ ] Figure 1, the hero banner (1280 x 640 px), from one test larva: photo, mask, skeleton with width, predicted weight and sex. Light and dark versions.
-- [ ] README in this order: title and the pitch "From photos to phenotypes: counting, measuring, weighing and sexing black soldier fly larvae with computer vision."; badges (dataset DOI, license, Python, CI); hero banner in a <picture> tag for light and dark mode; what it does (count, size, weight, sex); results table, ours beside the paper's; quickstart (install, make data, make figures); pipeline diagram in Mermaid; figure gallery; data credit and citation; author line and a one-line note that it was built with Claude Code.
-- [ ] CITATION.cff, LICENSE (AGPL-3.0), finished DATA_CARD.md, CI green.
+- [x] Figure 1, the hero banner (1280 x 640 px), from one test larva: photo, mask, skeleton with width, predicted weight and sex. Light and dark versions.
+- [x] README in this order: title and the pitch "From photos to phenotypes: counting, measuring, weighing and sexing black soldier fly larvae with computer vision."; badges (dataset DOI, license, Python, CI); hero banner in a <picture> tag for light and dark mode; what it does (count, size, weight, sex); results table, ours beside the paper's; quickstart (install, make data, make figures); pipeline diagram in Mermaid; figure gallery; data credit and citation; author line and a one-line note that it was built with Claude Code.
+- [x] CITATION.cff, LICENSE (AGPL-3.0), finished DATA_CARD.md, CI green.
 - [ ] Remind me to switch the repo on in Zenodo (GitHub integration) before the release, so v1.0 gets a DOI.
 - [ ] Show me the README. After I approve, make the repo public and create release v1.0 with short notes.
 - [ ] Tell me how to set the repo's social preview image to the hero banner.

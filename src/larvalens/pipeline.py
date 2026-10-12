@@ -155,6 +155,8 @@ def build_figures() -> list[Path]:
         made += detect_figures()
     if (RESULTS / "weight_summary_shape.csv").exists():
         made += weight_figures()
+    if (RESULTS / "sex_predictions.csv").exists() and (OUTPUTS / "03_measure" / "crops").exists():
+        made += hero_banner()
     return made
 
 
@@ -429,3 +431,62 @@ def _square(im, size: int = 224):
     canvas = Image.new("RGB", (side, side), fill)
     canvas.paste(Image.fromarray(a), ((side - w) // 2, (side - h) // 2))
     return np.asarray(canvas.resize((size, size), Image.BILINEAR))
+
+
+def hero_banner() -> list[Path]:
+    """Figure 1 from the typical-weight held-out larva used in figure 10."""
+    import matplotlib.image as mpimg
+    import matplotlib.pyplot as plt
+
+    from larvalens.paths import FIGURES, PROCESSED
+    from larvalens.viz.hero import hero
+
+    labels = pd.read_csv(PROCESSED / "labels.csv")
+    meas = pd.read_csv(RESULTS / "measurements.csv").merge(labels, on="larva_id")
+    crop_dir = OUTPUTS / "03_measure" / "crops"
+    t = meas[meas["method"] == "yolo"].copy()
+    t["gap"] = (t["weight_g"] - t["weight_g"].median()).abs()
+    rec = t.nsmallest(1, "gap").iloc[0]
+    stem = Path(rec["copy"]).stem
+    crop = mpimg.imread(crop_dir / f"{stem}.jpg")
+    mask = mpimg.imread(OUTPUTS / "03_measure" / "masks" / f"{stem}.png")
+    mask = (mask if mask.ndim == 2 else mask[..., 0]) > 0.5
+    cal = pd.read_csv(RESULTS / "calibration_oof.csv").set_index("larva_id")
+    k = cal.loc[rec["larva_id"], "mm_per_px"]
+    preds = pd.read_csv(RESULTS / "weight_predictions_shape.csv")
+    extra = RESULTS / "weight_predictions_pixels.csv"
+    if extra.exists():
+        preds = pd.concat([preds, pd.read_csv(extra)], ignore_index=True)
+    summary = pd.read_csv(RESULTS / "weight_summary_shape.csv")
+    if (RESULTS / "weight_summary_pixels.csv").exists():
+        summary = pd.concat([summary, pd.read_csv(RESULTS / "weight_summary_pixels.csv")])
+    best = summary.loc[summary["cv_r2_mean"].idxmax(), "model"]
+    p = preds[
+        (preds["model"] == best)
+        & (preds["larva_id"] == rec["larva_id"])
+        & (preds["eval"].isin(["cv", "bonus"]))
+    ]["pred_g"].iloc[0]
+    sexp = pd.read_csv(RESULTS / "sex_predictions.csv")
+    s = sexp[(sexp["larva_id"] == rec["larva_id"]) & (sexp["eval"].isin(["cv", "bonus"]))]
+    if len(s):
+        pm = s["p_male"].iloc[0]
+        sex_pred = f"{'male' if pm >= 0.5 else 'female'} ({max(pm, 1 - pm):.0%})"
+    else:
+        sex_pred = "n/a"
+    sex_true = {"F": "female", "M": "male"}.get(rec["sex"], "unknown")
+    info = {
+        "length_mm": rec["length_px"] * k,
+        "width_mm": rec["width_mid_px"] * k,
+        "pred_mg": p * 1000,
+        "true_mg": rec["weight_g"] * 1000,
+        "sex_pred": sex_pred,
+        "sex_true": sex_true,
+    }
+    made = []
+    for theme in ("light", "dark"):
+        fig = hero(crop, mask, k, info, theme)
+        path = FIGURES / f"fig01_hero_{theme}.png"
+        fig.savefig(path, dpi=100, facecolor=fig.get_facecolor(), bbox_inches=None)
+        plt.close(fig)
+        made.append(path)
+    return made

@@ -1,0 +1,51 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below, and cite the dataset and the paper it builds on."
+title: "LarvaLens: counting, measuring, weighing and sexing black soldier fly larvae with computer vision"
+type: software
+authors:
+  - family-names: Patwary
+    given-names: Md Raihan
+    orcid: "https://orcid.org/0009-0006-0616-3742"
+repository-code: "https://github.com/raihan-patwary/larvalens"
+license: AGPL-3.0-only
+version: 1.0.0
+keywords:
+  - black soldier fly
+  - Hermetia illucens
+  - computer vision
+  - instance segmentation
+  - morphometrics
+  - insect farming
+references:
+  - type: dataset
+    title: "Black soldier fly larvae dataset"
+    authors:
+      - family-names: Geissmann
+        given-names: Quentin
+    year: 2024
+    doi: 10.5281/zenodo.13359376
+    license: CC-BY-4.0
+  - type: article
+    title: "Prediction of black soldier fly larval sex and morphological traits using computer vision and deep learning"
+    authors:
+      - family-names: Nawoya
+        given-names: Sarah
+      - family-names: Geissmann
+        given-names: Quentin
+      - family-names: Karstoft
+        given-names: Henrik
+      - family-names: Bjerge
+        given-names: Kim
+      - family-names: Akol
+        given-names: Roseline
+      - family-names: Katumba
+        given-names: Andrew
+      - family-names: Mwikirize
+        given-names: Cosmas
+      - family-names: Gebreyesus
+        given-names: Grum
+    journal: "Smart Agricultural Technology"
+    volume: 11
+    start: 100953
+    year: 2025
+    doi: 10.1016/j.atech.2025.100953
