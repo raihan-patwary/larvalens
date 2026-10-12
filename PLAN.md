@@ -39,9 +39,9 @@ Work through the blocks in order and tick each box when it is done. Follow CLAUD
 - [x] Commit, push.
 
 ## Block 4: weight from pixels and embeddings
-- [ ] kernels/04_pixels (GPU, internet on, kernel_sources 03_measure): fine-tune a timm ResNet-18 on the fixed crops to predict weight (Huber loss on log weight; flips and 90 degree rotations only) with the batch folds in splits/larvae.csv (one model per fold, then the no-batch bonus test set and the random split). Extract DINOv2 ViT-S/14 features for every crop, fit ridge regression on them, and compute a 2D UMAP. Save predictions, metrics, features and UMAP coordinates.
-- [ ] Figures 13 (all models), 14 (final), 15 and 18.
-- [ ] Commit, push.
+- [x] kernels/04_pixels (GPU, internet on, kernel_sources 03_measure): fine-tune a timm ResNet-18 on the fixed crops to predict weight (Huber loss on log weight; flips and 90 degree rotations only) with the batch folds in splits/larvae.csv (one model per fold, then the no-batch bonus test set and the random split). Extract DINOv2 ViT-S/14 features for every crop, fit ridge regression on them, and compute a 2D UMAP. Save predictions, metrics, features and UMAP coordinates.
+- [x] Figures 13 (all models), 14 (final), 15 and 18.
+- [x] Commit, push.
 
 ## Block 5: sex classification and Grad-CAM
 - [x] kernels/05_sex (GPU, internet on): download Larva_sex_classification.zip, check md5, use the batch folds if the crops link to spreadsheet rows (else 5 folds stratified by sex with seed 42, and say so in the README), and fine-tune a timm ResNet-18 with class weights. Save accuracy, balanced accuracy, per-class F1, ROC-AUC, the confusion matrix, ROC and PR curve data, and Grad-CAM overlays for 8 right and 8 wrong crops per class.

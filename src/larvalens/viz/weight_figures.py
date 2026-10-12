@@ -299,8 +299,8 @@ def fig14_model_comparison(summary: pd.DataFrame) -> Figure:
     ax.set_xlabel("R² (higher is better)")
     ax.set_ylim(-1.25, len(s) - 0.5)
     fig.suptitle(
-        "Our shape models fall short of the paper's R² 0.80. Filled: batch folds "
-        "(mean ± SD); hollow: random 80/20.",
+        "Learning from pixels beats measuring shape. Filled: batch folds (mean ± SD); "
+        "hollow: random 80/20.",
         x=0.01,
         ha="left",
         fontweight="bold",
@@ -374,10 +374,10 @@ def fig18_umap(um: pd.DataFrame, labels: pd.DataFrame, crop_dir: Path | None) ->
                 OffsetImage(img, zoom=0.22), (rec.umap_x, rec.umap_y), frameon=False
             )
             ax.add_artist(ab)
-    ax.set_title("Each crop placed by its DINOv2 features", loc="left")
+    ax.set_title("DINOv2 groups crops by photo setup", loc="left")
     sc = bx.scatter(d["umap_x"], d["umap_y"], c=d["weight_g"], cmap="viridis", s=5, lw=0)
     fig.colorbar(sc, ax=bx, label="Weight (g)", fraction=0.046, pad=0.03)
-    bx.set_title("The same map coloured by weight", loc="left")
+    bx.set_title("Weight is mixed within each group", loc="left")
     for a in (ax, bx):
         a.set_xticks([])
         a.set_yticks([])

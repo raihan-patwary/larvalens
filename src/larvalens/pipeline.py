@@ -459,7 +459,9 @@ def hero_banner() -> list[Path]:
         preds = pd.concat([preds, pd.read_csv(extra)], ignore_index=True)
     summary = pd.read_csv(RESULTS / "weight_summary_shape.csv")
     if (RESULTS / "weight_summary_pixels.csv").exists():
-        summary = pd.concat([summary, pd.read_csv(RESULTS / "weight_summary_pixels.csv")])
+        summary = pd.concat(
+            [summary, pd.read_csv(RESULTS / "weight_summary_pixels.csv")], ignore_index=True
+        )
     best = summary.loc[summary["cv_r2_mean"].idxmax(), "model"]
     p = preds[
         (preds["model"] == best)

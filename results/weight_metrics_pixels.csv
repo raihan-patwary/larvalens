@@ -1,0 +1,15 @@
+model,eval,r2,rmse_g,mae_mg,n
+ResNet-18 (fine-tuned),fold 0,0.7954,0.0185,14.7657,326
+ResNet-18 (fine-tuned),fold 1,0.5489,0.0169,12.8297,226
+ResNet-18 (fine-tuned),fold 2,0.6936,0.0242,18.4369,243
+ResNet-18 (fine-tuned),fold 3,0.7299,0.0197,14.8293,298
+ResNet-18 (fine-tuned),fold 4,0.7439,0.0225,17.1034,298
+ResNet-18 (fine-tuned),bonus,0.619,0.0158,12.4064,217
+ResNet-18 (fine-tuned),random,0.796,0.0169,12.4994,320
+DINOv2 + ridge,fold 0,0.6336,0.0248,19.4164,326
+DINOv2 + ridge,fold 1,0.4072,0.0193,15.1665,226
+DINOv2 + ridge,fold 2,0.6595,0.0255,20.0973,243
+DINOv2 + ridge,fold 3,0.6077,0.0237,17.9079,298
+DINOv2 + ridge,fold 4,0.6864,0.0249,19.4353,298
+DINOv2 + ridge,bonus,0.0636,0.0248,19.7798,217
+DINOv2 + ridge,random,0.6726,0.0214,16.5443,320

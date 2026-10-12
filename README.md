@@ -27,13 +27,13 @@ LarvaLens rebuilds and stress-tests the image pipeline of [Nawoya et al. (2025)]
 | --- | --- | --- | --- | --- |
 | Detect and outline (mask AP50) | YOLOv8m-seg | | 0.89 (photo-grouped split) | 0.93 |
 | Weight from shape (R²) | Linear on area, length, width | 0.53 ± 0.17 | 0.58 | 0.80 |
-| Weight from pixels (R²) | ResNet-18 and DINOv2 + ridge | pending | pending | 0.71 |
+| Weight from pixels (R²) | ResNet-18, fine-tuned | **0.70 ± 0.09** | **0.80** | 0.71 |
 | Sex (balanced accuracy / accuracy) | ResNet-18, class weights | 0.56 / 0.61 | 0.56 / 0.60 | accuracy 0.74 on a balanced subset |
 
 What the honest test changes:
 
 1. **Detection is solid.** Our split keeps all augmented copies of a photo together, which the paper's split may not have done; most remaining "errors" are larvae the labellers skipped.
-2. **Weight from shape is harder than reported.** Image length agrees with caliper length only at r = 0.73, because larvae stretch and contract between the caliper and the camera. Unseen batches cost a little more again.
+2. **Weight is best learned straight from the pixels.** A fine-tuned ResNet-18 on fixed-size crops (one shrink factor for every larva, so size is kept) reaches R² 0.70 on unseen batches and 0.80 on a random split (MAE 12.5 mg), matching the paper's best figure. Measuring shape does worse (R² 0.53 on unseen batches) because image length agrees with caliper length only at r = 0.73: larvae stretch and contract between the caliper and the camera. Frozen DINOv2 features with ridge regression sit in between (R² 0.60); they group the crops by photo setup rather than by weight.
 3. **Sex is barely predictable from a single photo** (ROC-AUC 0.57). The paper's 74% came from a hand-balanced subset; on all usable crops and unseen batches the signal is weak.
 4. **The data needed care.** The audit found that the detection set holds only 185 distinct photos, that its two class IDs both mean "larva", and that 36 sex-crop files are not images. All of this is in [DATA_CARD.md](DATA_CARD.md) and [results/data_checks.md](results/data_checks.md).
 
@@ -85,7 +85,8 @@ flowchart LR
 <tr><td><img src="figures/fig05_weight_ridgeline.png" alt="Weight by batch"><br>Weight by batch</td>
 <td><img src="figures/fig06_image_qc.png" alt="Image QC"><br>Image quality</td></tr>
 <tr><td><img src="figures/fig09_training_curves.png" alt="Training curves"><br>Detection training curves</td>
-<td></td></tr>
+<td><img src="figures/fig15_failures.png" alt="Failure gallery"><br>The largest weight misses</td></tr>
+<tr><td><img src="figures/fig18_umap.png" alt="UMAP"><br>DINOv2 feature map</td><td></td></tr>
 </table>
 
 Every figure is built by a script from saved results, with one style file (`src/larvalens/viz/bsf.mplstyle`) and colour-blind-safe colours with fixed meanings.
