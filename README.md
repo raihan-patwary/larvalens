@@ -94,7 +94,7 @@ flowchart LR
     D --> L
 ```
 
-## Run it yourself
+## Reproduce the results
 
 ```bash
 git clone https://github.com/raihan-patwary/larvalens

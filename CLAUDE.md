@@ -2,7 +2,7 @@
 
 Computer vision portfolio repo on the public black soldier fly (BSF) larvae dataset: Zenodo 10.5281/zenodo.13359376 (CC BY 4.0), linked paper Nawoya et al. 2025, Smart Agricultural Technology 11, 100953. Goal: a polished public GitHub repo that shows clean Python engineering, careful data processing and publication-quality figures. Not a paper.
 
-Owner: Md Raihan Patwary, ORCID 0009-0006-0616-3742. GitHub: raihan-patwary. Kaggle: mdraihanpatwary02.
+Owner: Md Raihan Patwary. GitHub: raihan-patwary. Kaggle: mdraihanpatwary02.
 
 Task plan: @PLAN.md. Work through it in order and tick each box when it is done.
 
