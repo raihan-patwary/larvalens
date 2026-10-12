@@ -1,0 +1,44 @@
+# LarvaLens house style. Every figure uses this file; no figure sets its own fonts or sizes.
+font.family: sans-serif
+font.sans-serif: Inter, Source Sans 3, Source Sans Pro, DejaVu Sans, Arial
+font.size: 8.5
+axes.titlesize: 9
+axes.titleweight: bold
+axes.titlelocation: left
+axes.labelsize: 8.5
+xtick.labelsize: 8
+ytick.labelsize: 8
+legend.fontsize: 8
+legend.frameon: False
+
+axes.spines.top: False
+axes.spines.right: False
+axes.linewidth: 0.6
+axes.edgecolor: 333333
+axes.labelcolor: 222222
+axes.grid: False
+grid.color: E6E6E6
+grid.linewidth: 0.5
+xtick.color: 333333
+ytick.color: 333333
+xtick.major.width: 0.6
+ytick.major.width: 0.6
+xtick.major.size: 3
+ytick.major.size: 3
+
+axes.prop_cycle: cycler('color', ['D55E00', '0072B2', 'E69F00', '56B4E9', '009E73', 'CC79A7', 'F0E442', '000000'])
+image.cmap: viridis
+
+lines.linewidth: 1.2
+lines.markersize: 4
+scatter.edgecolors: none
+patch.linewidth: 0.5
+
+figure.dpi: 150
+figure.facecolor: white
+figure.constrained_layout.use: True
+savefig.dpi: 300
+savefig.facecolor: white
+savefig.bbox: tight
+savefig.pad_inches: 0.03
+svg.fonttype: none

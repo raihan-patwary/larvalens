@@ -1,0 +1,47 @@
+[build-system]
+requires = ["hatchling==1.29.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "larvalens"
+version = "0.1.0"
+description = "From photos to phenotypes: counting, measuring, weighing and sexing black soldier fly larvae with computer vision."
+readme = "README.md"
+license = "AGPL-3.0-only"
+authors = [{ name = "Md Raihan Patwary" }]
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "matplotlib==3.11.2",
+    "numpy==2.4.6",
+    "opencv-python-headless==5.0.0.93",
+    "openpyxl==3.1.5",
+    "pandas==3.0.6",
+    "pillow==12.3.0",
+    "pyyaml==6.0.3",
+    "requests==2.34.2",
+    "scikit-image==0.26.0",
+    "scikit-learn==1.9.1",
+    "scipy==1.17.1",
+    "seaborn==0.13.2",
+    "skan==0.13.1",
+]
+
+[dependency-groups]
+dev = ["pytest==9.1.1", "ruff==0.17.0"]
+
+[project.scripts]
+larvalens = "larvalens.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/larvalens"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["kernels"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

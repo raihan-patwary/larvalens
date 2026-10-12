@@ -1,0 +1,27 @@
+# data and large files
+data/
+outputs/
+*.zip
+*.pt
+*.pth
+*.onnx
+# paper and planning documents (paper is CC BY-NC-ND)
+*.pdf
+*.docx
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+# notebooks and editors
+.ipynb_checkpoints/
+.vscode/
+.idea/
+# kaggle
+kaggle.json
+kernels/*/output/
+build/
