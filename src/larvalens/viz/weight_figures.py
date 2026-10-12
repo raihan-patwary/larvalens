@@ -324,3 +324,64 @@ def fig14_model_comparison(summary: pd.DataFrame) -> Figure:
         a.set_axisbelow(True)
     viz.panel_letters([ax, bx])
     return fig
+
+
+def fig15_failures(preds: pd.DataFrame, crop_dir: Path, n: int = 12) -> Figure:
+    """The worst out-of-fold weight predictions of one model, with their crops."""
+    d = preds.assign(err=preds["pred_g"] - preds["weight_g"])
+    worst = d.reindex(d["err"].abs().sort_values(ascending=False).index).head(n)
+    ncols = 6
+    nrows = int(np.ceil(n / ncols))
+    fig, axes = viz.new_figure(
+        "double",
+        7.2 * nrows / ncols + 0.6,
+        nrows,
+        ncols,
+        gridspec_kw={"wspace": 0.05, "hspace": 0.25},
+    )
+    for ax, rec in zip(axes.flat, worst.itertuples(), strict=False):
+        color = viz.COLORS["female"] if rec.err > 0 else viz.COLORS["male"]
+        _thumb(ax, crop_dir / f"{Path(rec.copy).stem}.jpg", color)
+        ax.set_title(
+            f"{rec.weight_g * 1000:.0f} mg, predicted {rec.pred_g * 1000:.0f}",
+            fontsize=6.5,
+            loc="left",
+        )
+    for ax in axes.flat[len(worst) :]:
+        ax.axis("off")
+    fig.suptitle(
+        "The largest misses: orange border = overestimate, blue = underestimate",
+        x=0.01,
+        ha="left",
+        fontweight="bold",
+        fontsize=9,
+    )
+    return fig
+
+
+def fig18_umap(um: pd.DataFrame, labels: pd.DataFrame, crop_dir: Path | None) -> Figure:
+    """UMAP of DINOv2 features: thumbnails (where crops are available) and coloured by weight."""
+    d = um.merge(labels[["larva_id", "weight_g"]], on="larva_id")
+    fig, (ax, bx) = viz.new_figure("double", 3.6, 1, 2)
+    ax.scatter(d["umap_x"], d["umap_y"], s=3, color="#CCCCCC", lw=0)
+    if crop_dir is not None:
+        from matplotlib.offsetbox import AnnotationBbox, OffsetImage
+
+        have = [p for p in d.itertuples() if (crop_dir / f"{Path(p.copy).stem}.jpg").exists()]
+        for rec in have:
+            img = mpimg.imread(crop_dir / f"{Path(rec.copy).stem}.jpg")[::8, ::8]
+            ab = AnnotationBbox(
+                OffsetImage(img, zoom=0.22), (rec.umap_x, rec.umap_y), frameon=False
+            )
+            ax.add_artist(ab)
+    ax.set_title("Each crop placed by its DINOv2 features", loc="left")
+    sc = bx.scatter(d["umap_x"], d["umap_y"], c=d["weight_g"], cmap="viridis", s=5, lw=0)
+    fig.colorbar(sc, ax=bx, label="Weight (g)", fraction=0.046, pad=0.03)
+    bx.set_title("The same map coloured by weight", loc="left")
+    for a in (ax, bx):
+        a.set_xticks([])
+        a.set_yticks([])
+        a.set_xlabel("UMAP 1")
+        a.set_ylabel("UMAP 2")
+    viz.panel_letters([ax, bx])
+    return fig

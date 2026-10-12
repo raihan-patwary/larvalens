@@ -34,10 +34,27 @@ def _weights(_: argparse.Namespace) -> None:
     print(run_weight_models().to_string())
 
 
+def _pixels(_: argparse.Namespace) -> None:
+    from larvalens.pipeline import run_pixel_models
+
+    print(run_pixel_models().to_string())
+
+
+def _sex(_: argparse.Namespace) -> None:
+    import matplotlib
+
+    matplotlib.use("Agg")
+    from larvalens.pipeline import run_sex
+
+    print(run_sex().to_string())
+
+
 COMMANDS: dict[str, tuple[str, Callable[[argparse.Namespace], None]]] = {
     "version": ("Print the package version.", _version),
     "data": ("Download, verify, clean, audit and split the data.", _data),
     "weights": ("Fit the weight-from-shape models on the measurements.", _weights),
+    "pixels": ("Score the pixel models (ResNet-18 and DINOv2 + ridge).", _pixels),
+    "sex": ("Score the sex classifier and draw figures 16 and 17.", _sex),
     "figures": ("Rebuild every figure from saved results.", _figures),
 }
 

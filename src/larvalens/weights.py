@@ -154,3 +154,30 @@ def calibration_oof(df: pd.DataFrame) -> pd.DataFrame:
         k = fit_mm_per_px(batched["length_px"], batched["length_mm"])
         parts.append(bonus.assign(mm_per_px=k, img_length_mm=bonus["length_px"] * k, eval="bonus"))
     return pd.concat(parts)
+
+
+def ridge_on_features(features: pd.DataFrame) -> FitPredict:
+    """Ridge regression on frozen image features (indexed by larva_id), predicting log weight.
+
+    The ridge strength is chosen by internal cross-validation on the training
+    rows only.
+    """
+    from sklearn.linear_model import RidgeCV
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
+
+    def fit_predict(train: pd.DataFrame, test: pd.DataFrame) -> np.ndarray:
+        model = make_pipeline(StandardScaler(), RidgeCV(alphas=np.logspace(-1, 4, 21)))
+        model.fit(features.loc[train["larva_id"]], np.log(train["weight_g"]))
+        return np.exp(model.predict(features.loc[test["larva_id"]]))
+
+    return fit_predict
+
+
+def score_predictions(preds: pd.DataFrame, truth: pd.DataFrame) -> pd.DataFrame:
+    """Turn saved predictions (larva_id, model, eval, run, pred_g) into metric rows."""
+    d = preds.merge(truth[["larva_id", "weight_g"]], on="larva_id")
+    rows = []
+    for (model, run), g in d.groupby(["model", "run"], sort=False):
+        rows.append({"model": model, "eval": run, **scores(g["weight_g"], g["pred_g"])})
+    return pd.DataFrame(rows)

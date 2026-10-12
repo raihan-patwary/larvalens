@@ -336,4 +336,96 @@ def weight_figures() -> list[Path]:
     if extra_s.exists():
         summary = pd.concat([summary, pd.read_csv(extra_s)], ignore_index=True)
     made += viz.save(wf.fig14_model_comparison(summary), "fig14_model_comparison")
+    if extra.exists():
+        resnet_cv = cv[cv["model"] == "ResNet-18 (fine-tuned)"]
+        made += viz.save(wf.fig15_failures(resnet_cv, crop_dir), "fig15_failures")
+        um = pd.read_csv(RESULTS / "umap.csv")
+        made += viz.save(
+            wf.fig18_umap(um, labels, crop_dir if crop_dir.exists() else None), "fig18_umap"
+        )
     return made
+
+
+def run_pixel_models() -> pd.DataFrame:
+    """Score the ResNet-18 predictions from 04_pixels and fit ridge on DINOv2 features."""
+    import numpy as np
+
+    from larvalens import weights
+    from larvalens.paths import PROCESSED
+
+    out = OUTPUTS / "04_pixels"
+    labels = pd.read_csv(PROCESSED / "labels.csv")
+    folds = pd.read_csv(SPLITS / "larvae.csv", dtype={"fold": str})
+    ids = pd.read_csv(out / "dinov2_ids.csv")
+    df = ids.merge(labels[["larva_id", "weight_g", "length_mm"]], on="larva_id").merge(
+        folds[["larva_id", "fold", "random_split"]], on="larva_id"
+    )
+    feats = pd.DataFrame(np.load(out / "dinov2_features.npy"), index=ids["larva_id"])
+    m_ridge, p_ridge = weights.evaluate(df, weights.ridge_on_features(feats), "DINOv2 + ridge")
+    resnet = pd.read_csv(out / "resnet18_predictions.csv")
+    m_resnet = weights.score_predictions(resnet, labels)
+    p_resnet = resnet.drop(columns="run")
+    metrics = pd.concat([m_resnet, m_ridge], ignore_index=True)
+    preds = pd.concat([p_resnet, p_ridge], ignore_index=True).merge(
+        df[["larva_id", "weight_g", "copy"]], on="larva_id"
+    )
+    metrics.round(4).to_csv(RESULTS / "weight_metrics_pixels.csv", index=False)
+    preds.round(5).to_csv(RESULTS / "weight_predictions_pixels.csv", index=False)
+    summary = weights.summarise(metrics)
+    summary.round(4).to_csv(RESULTS / "weight_summary_pixels.csv", index=False)
+    pd.read_csv(out / "umap.csv").round(4).to_csv(RESULTS / "umap.csv", index=False)
+    pd.read_csv(out / "resnet18_training.csv").round(5).to_csv(
+        RESULTS / "resnet18_training.csv", index=False
+    )
+    return summary
+
+
+def run_sex() -> pd.DataFrame:
+    """Score the 05_sex predictions and draw figures 16 and 17."""
+    import io
+    import zipfile
+
+    import numpy as np
+    from PIL import Image
+
+    from larvalens import sex, viz
+    from larvalens.viz import sex_figures
+
+    out = OUTPUTS / "05_sex"
+    preds = pd.read_csv(out / "sex_predictions.csv")
+    scores = sex.score_runs(preds)
+    scores.round(4).to_csv(RESULTS / "sex_scores.csv", index=False)
+    preds.round(5).to_csv(RESULTS / "sex_predictions.csv", index=False)
+    cv = preds[preds["eval"] == "cv"]
+    pooled = scores.set_index("run").loc["pooled out-of-fold"]
+    viz.save(sex_figures.fig16_sex_results(cv, pooled), "fig16_sex_results")
+    z = np.load(out / "gradcam.npz")
+    cams = dict(zip(z["keys"], z["cams"].astype(np.float32), strict=True))
+    picks = cv.assign(
+        right=(cv["p_male"] >= 0.5) == (cv["sex"] == "M"), key=cv["run"] + "|" + cv["file"]
+    )
+    # most confident right answers and most confident wrong answers
+    picks["conf"] = (picks["p_male"] - 0.5).abs()
+    picks = picks.sort_values("conf", ascending=False).groupby(["sex", "right"]).head(8)
+    with zipfile.ZipFile(RAW / "Larva_sex_classification.zip") as zf:
+        names = {n.rsplit("/", 1)[-1]: n for n in zf.namelist()}
+        images = {}
+        for f in picks["file"]:
+            images[f] = _square(Image.open(io.BytesIO(zf.read(names[f]))))
+    viz.save(sex_figures.fig17_gradcam(images, picks, cams), "fig17_gradcam")
+    return scores
+
+
+def _square(im, size: int = 224):
+    """Pad to a square with the median border colour and resize (as in 05_sex)."""
+    import numpy as np
+    from PIL import Image
+
+    a = np.asarray(im.convert("RGB"))
+    border = np.concatenate([a[0], a[-1], a[:, 0], a[:, -1]])
+    fill = tuple(int(v) for v in np.median(border, axis=0))
+    h, w = a.shape[:2]
+    side = max(h, w)
+    canvas = Image.new("RGB", (side, side), fill)
+    canvas.paste(Image.fromarray(a), ((side - w) // 2, (side - h) // 2))
+    return np.asarray(canvas.resize((size, size), Image.BILINEAR))

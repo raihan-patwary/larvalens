@@ -56,3 +56,28 @@ def test_all_models_run_and_summarise() -> None:
     summary = weights.summarise(all_metrics)
     assert set(summary["model"]) == set(weights.MODELS)
     assert {"cv_r2_mean", "cv_r2_std", "bonus_r2", "random_r2"} <= set(summary.columns)
+
+
+def test_ridge_on_features_learns_a_linear_signal() -> None:
+    df = synthetic()
+    rng = np.random.default_rng(1)
+    feats = pd.DataFrame(rng.normal(size=(len(df), 8)), index=df["larva_id"])
+    feats[0] = np.log(df["weight_g"].to_numpy()) * 10  # one informative feature
+    metrics, _ = weights.evaluate(df, weights.ridge_on_features(feats), "ridge")
+    assert (metrics[metrics["eval"].str.startswith("fold")]["r2"] > 0.95).all()
+
+
+def test_score_predictions() -> None:
+    truth = pd.DataFrame({"larva_id": [1, 2, 3, 4], "weight_g": [0.1, 0.2, 0.3, 0.4]})
+    preds = pd.DataFrame(
+        {
+            "larva_id": [1, 2, 3, 4],
+            "model": "m",
+            "eval": "cv",
+            "run": ["fold 0"] * 2 + ["fold 1"] * 2,
+            "pred_g": [0.1, 0.2, 0.3, 0.5],
+        }
+    )
+    out = weights.score_predictions(preds, truth).set_index("eval")
+    assert out.loc["fold 0", "mae_mg"] == pytest.approx(0.0)
+    assert out.loc["fold 1", "mae_mg"] == pytest.approx(50.0)

@@ -1,0 +1,13 @@
+{
+  "id": "mdraihanpatwary02/larvalens-04-pixels",
+  "title": "larvalens-04-pixels",
+  "code_file": "pixels.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": ["mdraihanpatwary02/larvalens-support"],
+  "kernel_sources": ["mdraihanpatwary02/larvalens-03-measure"],
+  "competition_sources": []
+}
