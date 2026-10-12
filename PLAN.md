@@ -44,8 +44,8 @@ Work through the blocks in order and tick each box when it is done. Follow CLAUD
 - [ ] Commit, push.
 
 ## Block 5: sex classification and Grad-CAM
-- [ ] kernels/05_sex (GPU, internet on): download Larva_sex_classification.zip, check md5, use the batch folds if the crops link to spreadsheet rows (else 5 folds stratified by sex with seed 42, and say so in the README), and fine-tune a timm ResNet-18 with class weights. Save accuracy, balanced accuracy, per-class F1, ROC-AUC, the confusion matrix, ROC and PR curve data, and Grad-CAM overlays for 8 right and 8 wrong crops per class.
-- [ ] Figures 16 and 17.
+- [x] kernels/05_sex (GPU, internet on): download Larva_sex_classification.zip, check md5, use the batch folds if the crops link to spreadsheet rows (else 5 folds stratified by sex with seed 42, and say so in the README), and fine-tune a timm ResNet-18 with class weights. Save accuracy, balanced accuracy, per-class F1, ROC-AUC, the confusion matrix, ROC and PR curve data, and Grad-CAM overlays for 8 right and 8 wrong crops per class.
+- [x] Figures 16 and 17.
 - [ ] Commit, push.
 
 ## Block 6: README and v1.0
