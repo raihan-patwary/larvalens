@@ -135,3 +135,22 @@ def summarise(metrics: pd.DataFrame) -> pd.DataFrame:
         part = metrics[metrics["eval"] == ev].set_index("model")[["r2", "rmse_g", "mae_mg"]]
         agg = agg.join(part.add_prefix(f"{ev}_"))
     return agg.reset_index()
+
+
+def calibration_oof(df: pd.DataFrame) -> pd.DataFrame:
+    """Out-of-fold image length in mm for every batched larva, plus the bonus set.
+
+    mm per pixel is fitted on the training folds only, then applied to the
+    held-out fold. Unbatched larvae use the scale fitted on all batched rows.
+    """
+    parts = []
+    batched = df[df["fold"] != NO_BATCH]
+    for fold in sorted(batched["fold"].unique()):
+        train, test = batched[batched["fold"] != fold], batched[batched["fold"] == fold]
+        k = fit_mm_per_px(train["length_px"], train["length_mm"])
+        parts.append(test.assign(mm_per_px=k, img_length_mm=test["length_px"] * k, eval="cv"))
+    bonus = df[df["fold"] == NO_BATCH]
+    if len(bonus):
+        k = fit_mm_per_px(batched["length_px"], batched["length_mm"])
+        parts.append(bonus.assign(mm_per_px=k, img_length_mm=bonus["length_px"] * k, eval="bonus"))
+    return pd.concat(parts)

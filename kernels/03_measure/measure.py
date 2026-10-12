@@ -26,6 +26,9 @@ settings.update({k: False for k in ("raytune", "wandb", "mlflow", "comet", "clea
 
 OUT = "/kaggle/working"
 CROP = 512  # fixed window in photo-copy pixels (about 36 mm at the paper's scale)
+# A larva covers about 5,000 to 60,000 px on the 2048 px copies. Larger masks are
+# background leaks; they are flagged and not measured, which also keeps runtime bounded.
+MIN_AREA, MAX_AREA = 2_000, 150_000
 IMGSZ = 640
 
 
@@ -59,10 +62,19 @@ def best_model() -> str:
 
 
 def otsu_mask(rgb: np.ndarray) -> np.ndarray:
+    """Dark-object threshold; keep the larva-sized region closest to the photo centre."""
     gray = cv2.GaussianBlur(cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY), (5, 5), 0)
     _, m = cv2.threshold(gray, 0, 1, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
     m = cv2.morphologyEx(m, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
-    return largest_component(m)
+    n, lab, stats, cents = cv2.connectedComponentsWithStats(m)
+    h, w = m.shape
+    best, best_d = 0, np.inf
+    for i in range(1, n):
+        if MIN_AREA <= stats[i, cv2.CC_STAT_AREA] <= MAX_AREA:
+            d = np.hypot(cents[i][0] - w / 2, cents[i][1] - h / 2)
+            if d < best_d:
+                best, best_d = i, d
+    return lab == best if best else np.zeros_like(m, bool)
 
 
 def fixed_crop(img: np.ndarray, cy: float, cx: float, fill) -> np.ndarray:
@@ -103,6 +115,12 @@ def main() -> None:
             mask = otsu_mask(rgb)
             row.update(method="otsu", conf=np.nan, n_detections=0)
         mask = largest_component(mask)
+        area = int(mask.sum())
+        row["mask_area_ok"] = bool(MIN_AREA <= area <= MAX_AREA)
+        if not row["mask_area_ok"]:
+            row["area_px"] = area
+            rows.append(row)
+            continue
         m = measure(mask, rgb)
         row.update(m.as_dict())
         ys, xs = np.nonzero(mask)
@@ -122,7 +140,7 @@ def main() -> None:
             cv2.imwrite(f"{OUT}/masks/{stem}.png", cmask)
             row["fits_crop"] = bool(max(row["bbox_h"], row["bbox_w"]) <= CROP)
         rows.append(row)
-        if i % 200 == 0:
+        if i % 100 == 0:
             print(f"{i}/{len(files)} {(time.time() - t0) / 60:.1f} min", flush=True)
     df = pd.DataFrame(rows).merge(qc[["copy", "file", "larva_id", "scale", "width", "height"]],
                                   on="copy", how="left")

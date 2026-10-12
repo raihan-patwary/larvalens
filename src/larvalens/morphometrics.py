@@ -93,6 +93,16 @@ def measure(mask: np.ndarray, image_rgb: np.ndarray | None = None) -> Measuremen
     mask = largest_component(mask)
     if not mask.any():
         return Measurements(0.0, 0.0, 0.0, 0.0, 0.0)
+    # Work inside the bounding box (plus a margin): same answers, far less computation.
+    ys, xs = np.nonzero(mask)
+    pad = 3
+    win = (
+        slice(max(ys.min() - pad, 0), ys.max() + pad + 1),
+        slice(max(xs.min() - pad, 0), xs.max() + pad + 1),
+    )
+    mask = mask[win]
+    if image_rgb is not None:
+        image_rgb = image_rgb[win]
     dt = ndimage.distance_transform_edt(mask)
     path = longest_skeleton_path(skeletonize(mask))
     ends = path[[0, -1]].round().astype(int)
@@ -110,6 +120,6 @@ def measure(mask: np.ndarray, image_rgb: np.ndarray | None = None) -> Measuremen
         width_mid_px=float(2 * middle.mean()),
     )
     if image_rgb is not None:
-        lab = rgb2lab(image_rgb[..., :3])[mask]
+        lab = rgb2lab(image_rgb[..., :3][mask][np.newaxis])[0]
         out.lab_l, out.lab_a, out.lab_b = (float(v) for v in lab.mean(axis=0))
     return out

@@ -28,9 +28,16 @@ def _figures(_: argparse.Namespace) -> None:
         print(path.name)
 
 
+def _weights(_: argparse.Namespace) -> None:
+    from larvalens.pipeline import run_weight_models
+
+    print(run_weight_models().to_string())
+
+
 COMMANDS: dict[str, tuple[str, Callable[[argparse.Namespace], None]]] = {
     "version": ("Print the package version.", _version),
     "data": ("Download, verify, clean, audit and split the data.", _data),
+    "weights": ("Fit the weight-from-shape models on the measurements.", _weights),
     "figures": ("Rebuild every figure from saved results.", _figures),
 }
 

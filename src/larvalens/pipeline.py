@@ -153,6 +153,8 @@ def build_figures() -> list[Path]:
     made += viz.save(data_figures.fig05_weight_ridgeline(labels, batches), "fig05_weight_ridgeline")
     if (RESULTS / "detect_metrics_test.csv").exists():
         made += detect_figures()
+    if (RESULTS / "weight_summary_shape.csv").exists():
+        made += weight_figures()
     return made
 
 
@@ -214,4 +216,124 @@ def detect_figures() -> list[Path]:
         made += viz.save(fig, "fig07_detection_overlay")
     made += viz.save(df_.fig08_count_agreement(counts, DETECT_MODELS), "fig08_count_agreement")
     made += viz.save(df_.fig09_training_curves(epochs, DETECT_MODELS), "fig09_training_curves")
+    return made
+
+
+def measurement_table() -> pd.DataFrame:
+    """Join the 03_measure output with the cleaned labels and the splits."""
+    from larvalens.paths import PROCESSED
+
+    meas = pd.read_csv(OUTPUTS / "03_measure" / "measurements.csv")
+    labels = pd.read_csv(PROCESSED / "labels.csv")
+    folds = pd.read_csv(SPLITS / "larvae.csv", dtype={"fold": str})
+    df = meas.merge(labels, on="larva_id", how="inner").merge(
+        folds[["larva_id", "fold", "random_split"]], on="larva_id", how="left"
+    )
+    return df[df["length_px"] > 0].reset_index(drop=True)
+
+
+def run_weight_models() -> pd.DataFrame:
+    """Calibrate and fit the weight-from-shape models; save metrics and predictions."""
+    from larvalens import weights
+
+    df = measurement_table()
+    cal = weights.calibration_oof(df)
+    keep = [
+        "larva_id",
+        "copy",
+        "fold",
+        "eval",
+        "length_mm",
+        "img_length_mm",
+        "mm_per_px",
+        "method",
+        "conf",
+        "touches_border",
+        "fits_crop",
+    ]
+    cal[[c for c in keep if c in cal]].to_csv(RESULTS / "calibration_oof.csv", index=False)
+    metrics, preds = [], []
+    for name, fit_predict in weights.MODELS.items():
+        m, p = weights.evaluate(df, fit_predict, name)
+        metrics.append(m)
+        preds.append(p)
+    metrics = pd.concat(metrics, ignore_index=True)
+    preds = pd.concat(preds, ignore_index=True).merge(
+        df[["larva_id", "weight_g", "copy"]], on="larva_id"
+    )
+    metrics.round(4).to_csv(RESULTS / "weight_metrics_shape.csv", index=False)
+    preds.round(5).to_csv(RESULTS / "weight_predictions_shape.csv", index=False)
+    summary = weights.summarise(metrics)
+    summary.round(4).to_csv(RESULTS / "weight_summary_shape.csv", index=False)
+    qc = pd.read_csv(OUTPUTS / "01_photos" / "qc.csv")
+    qc[["copy", "larva_id", "blur", "brightness", "contrast"]].round(3).to_csv(
+        RESULTS / "photo_qc.csv", index=False
+    )
+    meas_cols = [
+        "larva_id",
+        "copy",
+        "method",
+        "conf",
+        "n_detections",
+        "area_px",
+        "perimeter_px",
+        "length_px",
+        "width_max_px",
+        "width_mid_px",
+        "lab_l",
+        "lab_a",
+        "lab_b",
+        "touches_border",
+        "fits_crop",
+    ]
+    df[[c for c in meas_cols if c in df]].round(3).to_csv(RESULTS / "measurements.csv", index=False)
+    return summary
+
+
+def weight_figures() -> list[Path]:
+    """Figures 2, 6 and 10 to 14 from saved results and the pulled crops."""
+    import matplotlib.image as mpimg
+
+    from larvalens import viz
+    from larvalens.paths import PROCESSED
+    from larvalens.viz import weight_figures as wf
+
+    made = []
+    crop_dir = OUTPUTS / "03_measure" / "crops"
+    mask_dir = OUTPUTS / "03_measure" / "masks"
+    labels = pd.read_csv(PROCESSED / "labels.csv")
+    meas = pd.read_csv(RESULTS / "measurements.csv").merge(labels, on="larva_id")
+    cal = pd.read_csv(RESULTS / "calibration_oof.csv")
+    paper_mm_per_px = 1 / (28.0 * 2048 / 4056)
+    if crop_dir.exists():
+        made += viz.save(wf.fig02_mosaic(meas, crop_dir), "fig02_mosaic")
+        made += viz.save(
+            wf.fig06_image_qc(pd.read_csv(RESULTS / "photo_qc.csv"), crop_dir), "fig06_image_qc"
+        )
+        typical = meas[(meas["method"] == "yolo")].copy()
+        typical["gap"] = (typical["weight_g"] - typical["weight_g"].median()).abs()
+        stem = Path(typical.nsmallest(1, "gap")["copy"].iloc[0]).stem
+        crop = mpimg.imread(crop_dir / f"{stem}.jpg")
+        mask = mpimg.imread(mask_dir / f"{stem}.png") > 0.5
+        mask = mask if mask.ndim == 2 else mask[..., 0]
+        made += viz.save(
+            wf.fig10_morphometrics(crop, mask, cal["mm_per_px"].median()), "fig10_morphometrics"
+        )
+    made += viz.save(
+        wf.fig11_calibration(cal[cal["eval"] == "cv"], paper_mm_per_px), "fig11_calibration"
+    )
+    made += viz.save(wf.fig12_allometry(labels), "fig12_allometry")
+    preds = pd.read_csv(RESULTS / "weight_predictions_shape.csv")
+    extra = RESULTS / "weight_predictions_pixels.csv"
+    if extra.exists():
+        preds = pd.concat([preds, pd.read_csv(extra)], ignore_index=True)
+    cv = preds[preds["eval"] == "cv"]
+    made += viz.save(
+        wf.fig13_pred_vs_measured(cv, list(dict.fromkeys(cv["model"]))), "fig13_pred_vs_measured"
+    )
+    summary = pd.read_csv(RESULTS / "weight_summary_shape.csv")
+    extra_s = RESULTS / "weight_summary_pixels.csv"
+    if extra_s.exists():
+        summary = pd.concat([summary, pd.read_csv(extra_s)], ignore_index=True)
+    made += viz.save(wf.fig14_model_comparison(summary), "fig14_model_comparison")
     return made
